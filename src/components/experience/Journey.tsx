@@ -8,6 +8,8 @@ import { useExperience } from "@/lib/experience-store";
 import { HeartCatch } from "@/components/games/HeartCatch";
 import { MemoryMatch } from "@/components/games/MemoryMatch";
 import { FindHiddenHeart } from "@/components/games/FindHiddenHeart";
+import { CupidArrow } from "@/components/games/CupidArrow";
+import { SpinTheWheel } from "@/components/games/SpinTheWheel";
 import { triggerFunnyPopup } from "./FunnyPopups";
 import { playChime, playFlourish, vibrate } from "@/lib/sound";
 
@@ -18,6 +20,9 @@ type SceneKind =
   | "memory"
   | "surprise"
   | "hidden"
+  | "cupid"
+  | "interstitial2"
+  | "wheel"
   | "prequestion";
 
 const SCENES: SceneKind[] = [
@@ -27,6 +32,9 @@ const SCENES: SceneKind[] = [
   "memory",
   "surprise",
   "hidden",
+  "cupid",
+  "interstitial2",
+  "wheel",
   "prequestion",
 ];
 
@@ -125,6 +133,44 @@ export function Journey() {
               {(handleWin) => <FindHiddenHeart onWin={handleWin} />}
             </GameScene>
           )}
+          {current === "cupid" && (
+            <GameScene
+              title="Cupid's Arrow"
+              subtitle="Aim with your cursor. Click to release. Strike the wandering hearts."
+              onWin={() => {
+                unlock("cupid");
+                addCollectable("rose", 3);
+                addCollectable("note", 2);
+                playFlourish();
+                vibrate([40, 60, 40]);
+                triggerFunnyPopup("Charging cupid's arrow...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <CupidArrow onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "interstitial2" && (
+            <InterstitialScene
+              emoji="🎡"
+              title="One more surprise."
+              body="Before the question, the wheel of love wants to gift you something. Spin it twice."
+              onContinue={next}
+            />
+          )}
+          {current === "wheel" && (
+            <GameScene
+              title="Wheel of Love"
+              subtitle="Spin twice. Each spin gifts a treasure."
+              onWin={() => {
+                addCollectable("key", 1);
+                triggerFunnyPopup("Wrapping your gifts...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <SpinTheWheel onWin={handleWin} />}
+            </GameScene>
+          )}
           {current === "prequestion" && (
             <IntroScene
               prequestion
@@ -133,6 +179,24 @@ export function Journey() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Top progress bar */}
+      <div className="fixed inset-x-0 top-0 z-20 h-1 bg-white/5">
+        <motion.div
+          className="h-full bg-gradient-to-r from-[var(--rose-glow)] via-[#ff8e72] to-[var(--gold)]"
+          initial={{ width: 0 }}
+          animate={{
+            width: `${((scene + 1) / SCENES.length) * 100}%`,
+          }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          style={{ boxShadow: "0 0 12px rgba(255,94,138,0.6)" }}
+        />
+      </div>
+
+      {/* Scene counter pill */}
+      <div className="fixed right-4 top-10 z-20 hidden rounded-full glass px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/50 sm:right-6 sm:top-12 sm:block">
+        {scene + 1} / {SCENES.length}
+      </div>
 
       {/* Progress dots */}
       <div className="fixed bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2">

@@ -55,3 +55,49 @@ Also verified: wandering NPCs (🐰🐉🦋👻🤖🦉), funny popups ("Compili
 4. Add rare chaos events + fake LoveOS boot overlay.
 5. PWA manifest + service worker for offline.
 6. Increase easter egg density (clickable stars, moon-click counter, double-click logo).
+
+---
+Task ID: cron-round-2
+Agent: Z.ai Code (webDevReview cron)
+Task: QA current state via agent-browser, fix bugs, and add new features (more mini-games, easter eggs, LoveOS overlay, music player, styling polish).
+
+Work Log:
+- Reviewed worklog.md to understand Phase 1 completion and next-step priorities.
+- Ran QA via agent-browser through boot → setup → journey intro → Heart Catch. Confirmed zero console errors in the stable flow.
+- Identified and fixed a setState-during-render lint regression in HeartCatch (converted from ref+forceRender pattern to clean state-based rendering).
+- Added **Cupid Arrow** mini-game (`src/components/games/CupidArrow.tsx`): aim with cursor, click to shoot arrows at moving hearts (golden = triple). Uses state + snapshot refs in a single RAF loop for collision detection without setState-in-effect.
+- Added **Spin the Wheel** mini-game (`src/components/games/SpinTheWheel.tsx`): an 8-segment conic-gradient wheel of romantic rewards (rose, chocolate, sparkle, letter, coin, diamond, golden heart, star). Spin twice to win; each spin grants a collectable.
+- Integrated both new games into the Journey flow — scenes expanded from 7 to 10: intro → Heart Catch → interstitial1 → Memory → surprise → Hidden Heart → **Cupid Arrow** → **interstitial2** → **Wheel of Love** → prequestion.
+- Added **CosmicEasterEggs** component (`src/components/experience/CosmicEasterEggs.tsx`): a clickable moon (click 10× for a blessing + golden hearts + achievement) and 14 scattered clickable twinkling stars (each grants star + sparkle collectables + a confetti burst). Hidden during boot/setup.
+- Added **LoveOSOverlay** component (`src/components/experience/LoveOSOverlay.tsx`): a rare (12% chance, once per session) fake-OS boot sequence with CRT scanlines, terminal lines ("Compiling butterflies...", "ERROR 404: Cold heart not found", "Too much cuteness detected"), and a "Continue anyway? YES" dismiss button.
+- Added **MusicPlayer** component (`src/components/experience/MusicPlayer.tsx`): a collapsible bottom-left player that embeds Spotify (iframe embed) or YouTube (iframe embed) when a valid link is configured in setup. Added `parseSpotifyId` and `parseYouTubeId` helpers to `src/lib/sound.ts`.
+- Added styling polish to the Journey: a top progress bar (gradient fill with glow), a scene-counter pill ("3 / 10"), kept the bottom progress dots.
+- Added styling polish to the Question scene: 6 floating decorative hearts drifting in the background, and a hidden double-click easter egg on the central 💞 heart (confetti burst + flourish + funny popup "You found a secret").
+- Wired all new components into ExperienceRoot.
+- Ran `bun run lint` → 0 errors, 0 warnings (fixed ref-during-render and setState-in-effect issues in CupidArrow, HeartCatch, SpinTheWheel).
+- Verified end-to-end via agent-browser: boot → setup (Alex/Jordan) → journey intro → Heart Catch (played, caught 12, advanced) → interstitial → Memory Match (solved all pairs, advanced) → surprise → Hidden Heart (found, advanced) → **Cupid Arrow (played, hit 8, advanced — zero errors)** → **interstitial2** → **Wheel of Love (spun twice, advanced)** → pre-question → Question (YES) → Finale (message + final button). Also observed the LoveOS overlay trigger mid-journey and the moon/stars rendering correctly.
+
+Stage Summary:
+- Journey now has **5 mini-games** (Heart Catch, Memory Match, Find Hidden Heart, Cupid Arrow, Spin the Wheel) across 10 scenes.
+- New easter eggs: clickable moon (10-click blessing), 14 clickable twinkling stars, double-click the 💞 in the Question scene.
+- New rare chaos event: LoveOS fake boot overlay (12% chance).
+- New feature: Spotify/YouTube music player embed (collapsible, appears post-setup).
+- Styling: top progress bar + scene counter + floating Question hearts.
+- All lint clean. All agent-browser verified with zero console errors.
+- Collection total reached 53+ during verification (lots of new collectables from the wheel + stars + cupid).
+
+## Known Limitations / Remaining Next Steps
+- Only 5 of the requested ~30 mini-games implemented (could add Sliding Puzzle, Whack-a-heart, Flappy Heart, etc.).
+- Photo/voice-note uploads not yet implemented.
+- No additional rare chaos events beyond LoveOS (gravity-flip, retro 8-bit mode, etc. not built).
+- Themes change particles but full scene-skin swaps (hidden universes) not yet built.
+- No service worker / offline PWA yet (manifest exists).
+- Spotify/YouTube embeds require the user to press play manually (autoplay blocked by browsers without user gesture).
+
+## Priority Recommendations for Next Phase
+1. Add 2–3 more mini-games (Sliding Puzzle, Whack-a-heart, Flappy Heart).
+2. Add photo/voice-note upload with object URLs + gallery view in finale.
+3. Add more rare chaos events (gravity flip, 8-bit retro mode, paper/LEGO mode).
+4. Add a "secret room" / developer room easter egg (e.g. click logo 5×).
+5. Add service worker for offline PWA support.
+6. Add hidden universes per theme (Galaxy → Black Hole → Nebula, Forest → Magic Cave, etc.).

@@ -137,11 +137,49 @@ export function Question() {
 
   return (
     <div className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-4 py-20 text-center">
+      {/* Floating decorative hearts */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="pointer-events-none absolute text-2xl opacity-30"
+          style={{
+            left: `${15 + i * 14}%`,
+            top: `${20 + (i % 3) * 25}%`,
+          }}
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 10, -10, 0],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{
+            duration: 4 + i,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.4,
+          }}
+        >
+          {["💖", "💕", "💗", "💝", "❤️", "🌹"][i]}
+        </motion.div>
+      ))}
+
       <motion.div
         initial={{ scale: 0, rotate: -20 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 180, damping: 14 }}
-        className="mb-6 text-7xl animate-heartbeat sm:text-8xl"
+        onDoubleClick={() => {
+          // Hidden easter egg: double-click the heart for a surprise burst
+          confetti({
+            particleCount: 80,
+            spread: 360,
+            origin: { x: 0.5, y: 0.4 },
+            shapes: ["💞", "💖", "✨"],
+            scalar: 1.5,
+          });
+          playFlourish();
+          vibrate([40, 60, 40]);
+          triggerFunnyPopup("You found a secret. 💞");
+        }}
+        className="mb-6 cursor-pointer text-7xl animate-heartbeat sm:text-8xl"
         style={{
           filter:
             "drop-shadow(0 0 30px rgba(255,94,138,0.9)) drop-shadow(0 0 80px rgba(255,94,138,0.5))",

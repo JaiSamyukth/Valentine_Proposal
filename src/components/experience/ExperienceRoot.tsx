@@ -16,6 +16,9 @@ import { AchievementToasts } from "./AchievementToasts";
 import { SecretListener } from "./SecretListener";
 import { WanderingNPCs } from "./WanderingNPCs";
 import { MuteButton } from "./MuteButton";
+import { CosmicEasterEggs } from "./CosmicEasterEggs";
+import { LoveOSOverlay } from "./LoveOSOverlay";
+import { MusicPlayer } from "./MusicPlayer";
 
 export function ExperienceRoot() {
   const phase = useExperience((s) => s.phase);
@@ -108,6 +111,9 @@ export function ExperienceRoot() {
       {/* Always-on UI layers */}
       {phase !== "boot" && <HUD />}
       {phase !== "boot" && <MuteButton />}
+      <CosmicEasterEggs />
+      <LoveOSOverlay />
+      <MusicPlayer />
       <FunnyPopups />
       <AchievementToasts />
       <SecretListener />

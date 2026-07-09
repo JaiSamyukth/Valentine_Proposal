@@ -207,6 +207,27 @@ export function stopMusic() {
   }
 }
 
+/**
+ * Extract a Spotify track/playlist ID from any Spotify URL.
+ * Returns null if not a valid Spotify link.
+ */
+export function parseSpotifyId(url: string): string | null {
+  const m = url.match(/spotify\.com\/(track|playlist|album)\/([a-zA-Z0-9]+)/);
+  if (!m) return null;
+  return m[2];
+}
+
+/**
+ * Extract a YouTube video ID from any YouTube URL.
+ */
+export function parseYouTubeId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (!m) return null;
+  return m[1];
+}
+
 /** Vibrate (mobile). */
 export function vibrate(pattern: number | number[] = 30) {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
