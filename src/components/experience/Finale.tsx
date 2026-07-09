@@ -1,0 +1,339 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import { useExperience } from "@/lib/experience-store";
+import { playChime, playFlourish, startAmbient, vibrate } from "@/lib/sound";
+
+type Stage = "sky" | "fireworks" | "constellation" | "message" | "button";
+
+export function Finale() {
+  const settings = useExperience((s) => s.settings);
+  const [stage, setStage] = useState<Stage>("sky");
+  const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    startAmbient();
+    // sequence
+    const t1 = setTimeout(() => setStage("fireworks"), 1200);
+    const t2 = setTimeout(() => setStage("constellation"), 3500);
+    const t3 = setTimeout(() => setStage("message"), 7000);
+    const t4 = setTimeout(() => {
+      setStage("button");
+      setShowButton(true);
+    }, 9500);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, []);
+
+  // continuous fireworks during fireworks + constellation
+  useEffect(() => {
+    if (stage !== "fireworks" && stage !== "constellation") return;
+    const burst = () => {
+      const colors = ["#ff5e8a", "#ffd166", "#7ae7ff", "#ff9ecd", "#fff3c4"];
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        startVelocity: 35,
+        origin: {
+          x: 0.2 + Math.random() * 0.6,
+          y: 0.2 + Math.random() * 0.3,
+        },
+        colors,
+        scalar: 0.9,
+      });
+      playChime(600 + Math.random() * 600, 0.4);
+    };
+    const interval = setInterval(burst, 700);
+    return () => clearInterval(interval);
+  }, [stage]);
+
+  return (
+    <div className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-4 py-20 text-center">
+      {/* Brightening sky overlay */}
+      <motion.div
+        className="pointer-events-none fixed inset-0 z-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: stage === "sky" ? 0.3 : 0.7 }}
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 100%, oklch(0.72 0.20 40 / 0.5), transparent 60%), radial-gradient(ellipse 70% 50% at 50% 0%, oklch(0.65 0.20 340 / 0.4), transparent 60%)",
+        }}
+      />
+
+      <AnimatePresence mode="wait">
+        {stage === "sky" && (
+          <motion.div
+            key="sky"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0], rotate: [0, 2, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="text-7xl"
+              style={{
+                filter:
+                  "drop-shadow(0 0 30px rgba(255,209,102,0.8)) drop-shadow(0 0 80px rgba(255,94,138,0.5))",
+              }}
+            >
+              🌅
+            </motion.div>
+            <p className="mt-6 font-script text-2xl text-white/70">
+              The sky begins to open...
+            </p>
+          </motion.div>
+        )}
+
+        {(stage === "fireworks" ||
+          stage === "constellation" ||
+          stage === "message" ||
+          stage === "button") && (
+          <motion.div
+            key="main"
+            className="relative z-10 flex w-full max-w-3xl flex-col items-center"
+          >
+            <ConstellationCanvas
+              names={[
+                settings.senderName || "Me",
+                settings.receiverName || "You",
+              ]}
+              active={stage !== "fireworks"}
+            />
+
+            <AnimatePresence>
+              {(stage === "message" || stage === "button") && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                  className="mt-10 max-w-xl"
+                >
+                  {settings.message ? (
+                    <p className="font-script text-2xl leading-relaxed text-white/90 sm:text-3xl">
+                      {settings.message}
+                    </p>
+                  ) : (
+                    <p className="font-script text-2xl leading-relaxed text-white/90 sm:text-3xl">
+                      In a world of countless stars, my whole sky found its
+                      center the moment I met you. You are my favorite story —
+                      and I'd like to keep writing it, one ordinary, magical day
+                      at a time.
+                    </p>
+                  )}
+                  <p className="mt-4 font-script text-lg text-[var(--gold)]">
+                    — {settings.senderName || "Yours, always"}
+                    {settings.petName ? `, ${settings.petName}` : ""}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {settings.dateSuggestion && showButton && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-6 rounded-full glass px-5 py-2 font-script text-base text-white/80"
+              >
+                📅 {settings.dateSuggestion}
+              </motion.p>
+            )}
+
+            <AnimatePresence>
+              {showButton && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.6, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 14 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    playFlourish();
+                    vibrate([60, 80, 60]);
+                    confetti({
+                      particleCount: 250,
+                      spread: 360,
+                      origin: { y: 0.5 },
+                      startVelocity: 45,
+                      shapes: ["❤️", "💖", "✨", "🌹", "💫"],
+                      scalar: 1.6,
+                    });
+                  }}
+                  className="relative mt-10 overflow-hidden rounded-full bg-gradient-to-r from-[var(--rose-glow)] via-[#ff8e72] to-[var(--gold)] px-10 py-5 font-display text-xl text-black glow-rose sm:text-2xl"
+                >
+                  <span className="relative z-10 flex items-center gap-3">
+                    ❤️ Let&apos;s Make This Date Happen ❤️
+                  </span>
+                  <span className="absolute inset-0 shimmer opacity-50" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {showButton && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="mt-8 font-script text-base text-white/40"
+              >
+                The end of the beginning. ✨
+              </motion.p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * Draws two names as constellations of stars, with lines connecting them.
+ */
+function ConstellationCanvas({
+  names,
+  active,
+}: {
+  names: [string, string];
+  active: boolean;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const phaseRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let w = (canvas.width = canvas.offsetWidth * 2);
+    let h = (canvas.height = 260 * 2);
+    ctx.scale(2, 2);
+    w = canvas.offsetWidth;
+    h = 260;
+
+    // sample points from text
+    const off = document.createElement("canvas");
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext("2d");
+    if (!octx) return;
+    octx.fillStyle = "#fff";
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    const fontSize = Math.min(72, w / (Math.max(...names.map((n) => n.length)) * 0.7));
+    octx.font = `700 ${fontSize}px var(--font-playfair), Georgia, serif`;
+
+    interface Pt {
+      x: number;
+      y: number;
+      r: number;
+      delay: number;
+    }
+    const allPoints: { pts: Pt[]; center: number }[] = [];
+    const gap = w / (names.length + 1);
+    names.forEach((name, ni) => {
+      octx.clearRect(0, 0, w, h);
+      const cx = gap * (ni + 1);
+      octx.fillText(name, cx, h / 2);
+      const data = octx.getImageData(0, 0, w, h).data;
+      const pts: Pt[] = [];
+      const step = Math.max(3, Math.floor(fontSize / 14));
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          const idx = (y * w + x) * 4 + 3;
+          if (data[idx] > 128) {
+            pts.push({
+              x: x + (Math.random() - 0.5) * 2,
+              y: y + (Math.random() - 0.5) * 2,
+              r: 1 + Math.random() * 1.5,
+              delay: Math.random() * 0.8,
+            });
+          }
+        }
+      }
+      // downsample if too many
+      const maxPts = 90;
+      const final =
+        pts.length > maxPts
+          ? pts.filter((_, i) => i % Math.ceil(pts.length / maxPts) === 0)
+          : pts;
+      allPoints.push({ pts: final, center: cx });
+    });
+
+    let raf = 0;
+    const start = performance.now();
+
+    const draw = () => {
+      const elapsed = (performance.now() - start) / 1000;
+      ctx.clearRect(0, 0, w, h);
+
+      allPoints.forEach(({ pts, center }, ni) => {
+        // connecting line under the name
+        const lineProg = Math.min(1, Math.max(0, (elapsed - 1.2 - ni * 0.3) / 1));
+        if (lineProg > 0 && pts.length > 1) {
+          ctx.save();
+          ctx.globalAlpha = 0.25 * lineProg;
+          ctx.strokeStyle = ni === 0 ? "#ff5e8a" : "#ffd166";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          const sorted = [...pts].sort((a, b) => a.x - b.x);
+          ctx.moveTo(sorted[0].x, sorted[0].y);
+          for (let i = 1; i < sorted.length; i++) {
+            ctx.lineTo(sorted[i].x, sorted[i].y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // stars
+        pts.forEach((p) => {
+          const localProg = Math.min(
+            1,
+            Math.max(0, (elapsed - p.delay - ni * 0.3) / 0.6)
+          );
+          if (localProg <= 0) return;
+          const tw = 0.6 + 0.4 * Math.sin(elapsed * 3 + p.x);
+          ctx.save();
+          ctx.globalAlpha = localProg * tw;
+          const color = ni === 0 ? "#ff9ecd" : "#ffe5b4";
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
+          grad.addColorStop(0, color);
+          grad.addColorStop(0.4, color + "80");
+          grad.addColorStop(1, "transparent");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.globalAlpha = localProg;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => cancelAnimationFrame(raf);
+  }, [names, active]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="h-[260px] w-full max-w-2xl"
+      aria-label={`${names[0]} and ${names[1]} written in the stars`}
+    />
+  );
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Something Someone Spent Courage On",
+  "short_name": "For You",
+  "description": "An unforgettable, cinematic Valentine's experience.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a0f1a",
+  "theme_color": "#1a0f1a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
