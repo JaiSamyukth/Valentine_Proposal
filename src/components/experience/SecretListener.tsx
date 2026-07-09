@@ -162,6 +162,15 @@ const COMMANDS: Record<string, () => void> = {
     });
     triggerFunnyPopup("The moon is listening. 🌙");
   },
+  portal: () => {
+    // Opens the Portal Room museum — imported lazily via dynamic import to
+    // avoid circular deps. The openPortalRoom trigger is set by the PortalRoom
+    // component on mount.
+    import("./PortalRoom").then(({ openPortalRoom }) => {
+      openPortalRoom();
+    });
+    triggerFunnyPopup("🌀 Opening a portal...");
+  },
 };
 
 export function SecretListener() {

@@ -12,6 +12,10 @@ import { CupidArrow } from "@/components/games/CupidArrow";
 import { SpinTheWheel } from "@/components/games/SpinTheWheel";
 import { WhackAHeart } from "@/components/games/WhackAHeart";
 import { SlidingPuzzle } from "@/components/games/SlidingPuzzle";
+import { BubblePop } from "@/components/games/BubblePop";
+import { TreasureHunt } from "@/components/games/TreasureHunt";
+import { ReactionTest } from "@/components/games/ReactionTest";
+import { BuildABouquet } from "@/components/games/BuildABouquet";
 import { triggerFunnyPopup } from "./FunnyPopups";
 import { playChime, playFlourish, vibrate } from "@/lib/sound";
 
@@ -28,6 +32,12 @@ type SceneKind =
   | "interstitial3"
   | "wheel"
   | "sliding"
+  | "interstitial4"
+  | "bubble"
+  | "treasure"
+  | "interstitial5"
+  | "reaction"
+  | "bouquet"
   | "prequestion";
 
 const SCENES: SceneKind[] = [
@@ -43,6 +53,12 @@ const SCENES: SceneKind[] = [
   "interstitial3",
   "wheel",
   "sliding",
+  "interstitial4",
+  "bubble",
+  "treasure",
+  "interstitial5",
+  "reaction",
+  "bouquet",
   "prequestion",
 ];
 
@@ -218,6 +234,78 @@ export function Journey() {
               {(handleWin) => <SlidingPuzzle onWin={handleWin} />}
             </GameScene>
           )}
+          {current === "interstitial4" && (
+            <InterstitialScene
+              emoji="🫧"
+              title="Almost there."
+              body="Two last surprises await. Pop the floating hearts, then dig for a hidden treasure."
+              onContinue={next}
+            />
+          )}
+          {current === "bubble" && (
+            <GameScene
+              title="Bubble Hearts"
+              subtitle="Tap the floating hearts before they drift into the sky."
+              onWin={() => {
+                addCollectable("rose", 2);
+                addCollectable("sparkle", 3);
+                triggerFunnyPopup("Catching drifting wishes...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <BubblePop onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "treasure" && (
+            <GameScene
+              title="Treasure in the Sand"
+              subtitle="A chest is buried here. Dig carefully — only 12 tries before the tide returns."
+              onWin={() => {
+                addCollectable("diamond", 1);
+                addCollectable("key", 1);
+                triggerFunnyPopup("Unearthing forever...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <TreasureHunt onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "interstitial5" && (
+            <InterstitialScene
+              emoji="⚡"
+              title="Two final tests."
+              body="First, prove your reflexes. Then gather a bouquet worthy of them."
+              onContinue={next}
+            />
+          )}
+          {current === "reaction" && (
+            <GameScene
+              title="Heart Reflex"
+              subtitle="Wait for the heart to light up. Tap as fast as you can."
+              onWin={() => {
+                addCollectable("sparkle", 4);
+                addCollectable("goldenHeart", 2);
+                triggerFunnyPopup("Calibrating reflexes...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <ReactionTest onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "bouquet" && (
+            <GameScene
+              title="Build a Bouquet"
+              subtitle="Pick 6 flowers from the garden. Each one is for them."
+              onWin={() => {
+                addCollectable("rose", 3);
+                addCollectable("flower", 5);
+                triggerFunnyPopup("Arranging petals...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <BuildABouquet onWin={handleWin} />}
+            </GameScene>
+          )}
           {current === "prequestion" && (
             <IntroScene
               prequestion
@@ -243,6 +331,22 @@ export function Journey() {
       {/* Scene counter pill */}
       <div className="fixed right-4 top-10 z-20 hidden rounded-full glass px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/50 sm:right-6 sm:top-12 sm:block">
         {scene + 1} / {SCENES.length}
+      </div>
+
+      {/* Love meter — a heart that fills as you progress */}
+      <div className="fixed left-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-1 sm:flex">
+        <div className="relative h-24 w-6 overflow-hidden rounded-full border border-white/15 bg-white/5">
+          <motion.div
+            className="absolute inset-x-0 bottom-0 rounded-full bg-gradient-to-t from-[var(--rose-glow)] to-[var(--gold)]"
+            initial={{ height: 0 }}
+            animate={{
+              height: `${((scene + 1) / SCENES.length) * 100}%`,
+            }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            style={{ boxShadow: "0 0 12px rgba(255,94,138,0.5)" }}
+          />
+        </div>
+        <span className="text-xs">💗</span>
       </div>
 
       {/* Progress dots */}

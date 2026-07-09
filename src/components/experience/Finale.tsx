@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+import { Play, Pause } from "lucide-react";
 import { useExperience } from "@/lib/experience-store";
 import { usePhotos } from "@/lib/photo-store";
+import { useVoiceNote } from "@/lib/voice-store";
 import { playChime, playFlourish, startAmbient, vibrate } from "@/lib/sound";
 
 type Stage = "sky" | "fireworks" | "constellation" | "message" | "button";
@@ -12,8 +14,11 @@ type Stage = "sky" | "fireworks" | "constellation" | "message" | "button";
 export function Finale() {
   const settings = useExperience((s) => s.settings);
   const photos = usePhotos((s) => s.photos);
+  const voiceNote = useVoiceNote((s) => s.note);
   const [stage, setStage] = useState<Stage>("sky");
   const [showButton, setShowButton] = useState(false);
+  const [playingVoice, setPlayingVoice] = useState(false);
+  const voiceRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     startAmbient();
@@ -207,6 +212,83 @@ export function Finale() {
                     </motion.li>
                   ))}
                 </ul>
+              </motion.div>
+            )}
+
+            {/* Voice note player */}
+            {showButton && voiceNote && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6 }}
+                className="mt-8 flex items-center gap-3 rounded-2xl glass-strong px-5 py-4"
+              >
+                <button
+                  onClick={() => {
+                    if (!voiceRef.current) {
+                      voiceRef.current = new Audio(voiceNote.url);
+                      voiceRef.current.onended = () => setPlayingVoice(false);
+                    }
+                    if (playingVoice) {
+                      voiceRef.current.pause();
+                      setPlayingVoice(false);
+                    } else {
+                      voiceRef.current.play();
+                      setPlayingVoice(true);
+                    }
+                  }}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-r from-[var(--rose-glow)] to-[var(--gold)] text-black glow-rose"
+                  aria-label={playingVoice ? "Pause voice note" : "Play voice note"}
+                >
+                  {playingVoice ? (
+                    <Pause className="h-5 w-5 fill-current" />
+                  ) : (
+                    <Play className="h-5 w-5 fill-current" />
+                  )}
+                </button>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-[var(--gold)]">
+                    🎙️ a voice from the heart
+                  </div>
+                  <div className="font-script text-sm text-white/70">
+                    Press play to hear their voice.
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Memories timeline reveal */}
+            {showButton && settings.timeline.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.0 }}
+                className="mt-8 w-full max-w-xl"
+              >
+                <p className="mb-3 text-center text-xs uppercase tracking-[0.25em] text-white/50">
+                  ✨ our story so far ✨
+                </p>
+                <div className="relative pl-6">
+                  {/* vertical line */}
+                  <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-[var(--rose-glow)] to-[var(--gold)]" />
+                  {settings.timeline.map((e, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 2.0 + i * 0.2 }}
+                      className="relative mb-3 flex items-center gap-3"
+                    >
+                      <span className="absolute -left-[18px] flex h-5 w-5 items-center justify-center rounded-full bg-[var(--rose-glow)]/20 text-xs ring-2 ring-[var(--rose-glow)]/40">
+                        {e.emoji}
+                      </span>
+                      <div className="ml-4 rounded-xl glass px-4 py-2">
+                        <span className="text-xs text-[var(--gold)]">{e.date}</span>
+                        <p className="font-script text-base text-white/85">{e.title}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
             )}
 

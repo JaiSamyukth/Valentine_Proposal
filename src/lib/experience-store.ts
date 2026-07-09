@@ -27,6 +27,7 @@ export interface ExperienceSettings {
   spotifyUrl: string;
   youtubeUrl: string;
   reasons: string[];
+  timeline: { date: string; title: string; emoji: string }[];
 }
 
 export type CollectableKey =
@@ -78,6 +79,8 @@ interface ExperienceState {
   setYes: () => void;
   addReason: (r: string) => void;
   removeReason: (i: number) => void;
+  addTimelineEntry: (e: { date: string; title: string; emoji: string }) => void;
+  removeTimelineEntry: (i: number) => void;
   reset: () => void;
 }
 
@@ -94,6 +97,7 @@ const DEFAULT_SETTINGS: ExperienceSettings = {
   spotifyUrl: "",
   youtubeUrl: "",
   reasons: [],
+  timeline: [],
 };
 
 const DEFAULT_COLLECTABLES: Record<CollectableKey, number> = {
@@ -159,6 +163,20 @@ export const useExperience = create<ExperienceState>()(
           settings: {
             ...st.settings,
             reasons: st.settings.reasons.filter((_, idx) => idx !== i),
+          },
+        })),
+      addTimelineEntry: (e) =>
+        set((st) => ({
+          settings: {
+            ...st.settings,
+            timeline: [...st.settings.timeline, e],
+          },
+        })),
+      removeTimelineEntry: (i) =>
+        set((st) => ({
+          settings: {
+            ...st.settings,
+            timeline: st.settings.timeline.filter((_, idx) => idx !== i),
           },
         })),
       reset: () =>

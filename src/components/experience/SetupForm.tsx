@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 
 export function SetupForm({ onBegin }: { onBegin: () => void }) {
   const settings = useExperience((s) => s.settings);
   const updateSettings = useExperience((s) => s.updateSettings);
   const addReason = useExperience((s) => s.addReason);
   const removeReason = useExperience((s) => s.removeReason);
+  const addTimelineEntry = useExperience((s) => s.addTimelineEntry);
+  const removeTimelineEntry = useExperience((s) => s.removeTimelineEntry);
   const photos = usePhotos((s) => s.photos);
   const addPhoto = usePhotos((s) => s.addPhoto);
   const removePhoto = usePhotos((s) => s.removePhoto);
@@ -242,6 +245,16 @@ export function SetupForm({ onBegin }: { onBegin: () => void }) {
                       reasons={settings.reasons}
                       onAdd={addReason}
                       onRemove={removeReason}
+                    />
+
+                    {/* Voice note recorder */}
+                    <VoiceNoteRecorder />
+
+                    {/* Memories timeline */}
+                    <TimelineEditor
+                      timeline={settings.timeline}
+                      onAdd={addTimelineEntry}
+                      onRemove={removeTimelineEntry}
                     />
                   </div>
                 </motion.div>
@@ -516,6 +529,112 @@ function ReasonsList({ reasons, onAdd, onRemove }: ReasonsListProps) {
           </motion.ul>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+interface TimelineEditorProps {
+  timeline: { date: string; title: string; emoji: string }[];
+  onAdd: (e: { date: string; title: string; emoji: string }) => void;
+  onRemove: (i: number) => void;
+}
+
+const TIMELINE_EMOJIS = ["💌", "🌹", "☕", "🎬", "🌙", "✈️", "🏖️", "🎂", "💫", "🏡"];
+
+function TimelineEditor({ timeline, onAdd, onRemove }: TimelineEditorProps) {
+  const [date, setDate] = useState("");
+  const [title, setTitle] = useState("");
+  const [emoji, setEmoji] = useState("💌");
+
+  const submit = () => {
+    if (!title.trim()) return;
+    onAdd({ date: date.trim() || "—", title: title.trim(), emoji });
+    setDate("");
+    setTitle("");
+    setEmoji("💌");
+    playPop();
+  };
+
+  return (
+    <div>
+      <Label className="mb-1.5 flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/50">
+        <Sparkles className="h-3.5 w-3.5 text-[var(--gold)]" />
+        Memories timeline (revealed in the finale)
+      </Label>
+      <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/80 [color-scheme:dark]"
+          />
+          <select
+            value={emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/80"
+          >
+            {TIMELINE_EMOJIS.map((e) => (
+              <option key={e} value={e} className="bg-[#1a0f1a]">
+                {e}
+              </option>
+            ))}
+          </select>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            placeholder="our first coffee together..."
+            className="min-w-[140px] flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white placeholder:text-white/30 focus:border-[var(--rose-glow)]"
+          />
+          <button
+            onClick={submit}
+            className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--rose-glow)]/40 bg-[var(--rose-glow)]/10 px-3 text-sm text-[var(--rose-glow)] hover:bg-[var(--rose-glow)]/20"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {timeline.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-1.5 overflow-hidden pt-1"
+            >
+              {timeline.map((e, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="group flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-sm"
+                >
+                  <span className="text-base">{e.emoji}</span>
+                  <span className="text-xs text-[var(--gold)]">{e.date}</span>
+                  <span className="flex-1 font-script text-white/80">{e.title}</span>
+                  <button
+                    onClick={() => {
+                      playPop();
+                      onRemove(i);
+                    }}
+                    className="text-white/30 opacity-0 transition-opacity hover:text-[var(--rose-glow)] group-hover:opacity-100"
+                    aria-label="Remove memory"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -21,6 +21,9 @@ import { LoveOSOverlay } from "./LoveOSOverlay";
 import { MusicPlayer } from "./MusicPlayer";
 import { DeveloperRoom } from "./DeveloperRoom";
 import { RetroChaosMode } from "./RetroChaosMode";
+import { GravityFlipChaos } from "./GravityFlipChaos";
+import { FakeBlueScreen } from "./FakeBlueScreen";
+import { PortalRoom } from "./PortalRoom";
 
 export function ExperienceRoot() {
   const phase = useExperience((s) => s.phase);
@@ -116,8 +119,11 @@ export function ExperienceRoot() {
       <CosmicEasterEggs />
       <LoveOSOverlay />
       <RetroChaosMode />
+      <GravityFlipChaos />
+      <FakeBlueScreen />
       <MusicPlayer />
       <DeveloperRoom />
+      <PortalRoom />
       <FunnyPopups />
       <AchievementToasts />
       <SecretListener />
