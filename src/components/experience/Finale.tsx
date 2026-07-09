@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useExperience } from "@/lib/experience-store";
+import { usePhotos } from "@/lib/photo-store";
 import { playChime, playFlourish, startAmbient, vibrate } from "@/lib/sound";
 
 type Stage = "sky" | "fireworks" | "constellation" | "message" | "button";
 
 export function Finale() {
   const settings = useExperience((s) => s.settings);
+  const photos = usePhotos((s) => s.photos);
   const [stage, setStage] = useState<Stage>("sky");
   const [showButton, setShowButton] = useState(false);
 
@@ -146,6 +148,66 @@ export function Finale() {
               >
                 📅 {settings.dateSuggestion}
               </motion.p>
+            )}
+
+            {/* Photo gallery reveal */}
+            {showButton && photos.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="mt-8 w-full max-w-2xl"
+              >
+                <p className="mb-3 text-center text-xs uppercase tracking-[0.25em] text-white/50">
+                  ✨ moments worth keeping ✨
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {photos.map((p, i) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, scale: 0.7, rotate: (Math.random() - 0.5) * 16 }}
+                      animate={{ opacity: 1, scale: 1, rotate: (Math.random() - 0.5) * 8 }}
+                      transition={{ delay: 0.8 + i * 0.15, type: "spring", stiffness: 200, damping: 14 }}
+                      whileHover={{ scale: 1.08, rotate: 0, zIndex: 10 }}
+                      className="relative h-24 w-24 overflow-hidden rounded-xl border-2 border-white/20 shadow-lg sm:h-28 sm:w-28"
+                    >
+                      <img
+                        src={p.url}
+                        alt={p.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Reasons reveal */}
+            {showButton && settings.reasons.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 }}
+                className="mt-8 w-full max-w-xl"
+              >
+                <p className="mb-3 text-center text-xs uppercase tracking-[0.25em] text-white/50">
+                  ♡ reasons I adore you ♡
+                </p>
+                <ul className="space-y-1.5">
+                  {settings.reasons.map((r, i) => (
+                    <motion.li
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.2 + i * 0.18 }}
+                      className="flex items-start gap-2 rounded-xl glass px-4 py-2 font-script text-lg text-white/85"
+                    >
+                      <span className="mt-0.5 text-[var(--rose-glow)]">♡</span>
+                      <span>{r}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
             )}
 
             <AnimatePresence>

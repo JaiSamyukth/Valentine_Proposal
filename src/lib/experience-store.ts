@@ -26,6 +26,7 @@ export interface ExperienceSettings {
   secretCode: string;
   spotifyUrl: string;
   youtubeUrl: string;
+  reasons: string[];
 }
 
 export type CollectableKey =
@@ -75,6 +76,8 @@ interface ExperienceState {
   setScene: (i: number) => void;
   registerNo: () => void;
   setYes: () => void;
+  addReason: (r: string) => void;
+  removeReason: (i: number) => void;
   reset: () => void;
 }
 
@@ -90,6 +93,7 @@ const DEFAULT_SETTINGS: ExperienceSettings = {
   secretCode: "",
   spotifyUrl: "",
   youtubeUrl: "",
+  reasons: [],
 };
 
 const DEFAULT_COLLECTABLES: Record<CollectableKey, number> = {
@@ -146,6 +150,17 @@ export const useExperience = create<ExperienceState>()(
       setScene: (i) => set({ currentScene: i }),
       registerNo: () => set((st) => ({ noAttempts: st.noAttempts + 1 })),
       setYes: () => set({ yesPressed: true }),
+      addReason: (r) =>
+        set((st) => ({
+          settings: { ...st.settings, reasons: [...st.settings.reasons, r] },
+        })),
+      removeReason: (i) =>
+        set((st) => ({
+          settings: {
+            ...st.settings,
+            reasons: st.settings.reasons.filter((_, idx) => idx !== i),
+          },
+        })),
       reset: () =>
         set({
           phase: "boot",

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Sparkles, Heart, Music, Link2 } from "lucide-react";
+import { ChevronDown, Sparkles, Heart, Music, Link2, ImagePlus, X, Plus } from "lucide-react";
 import { useExperience } from "@/lib/experience-store";
+import { usePhotos } from "@/lib/photo-store";
 import { THEME_LIST } from "@/lib/themes";
 import { playPop, vibrate } from "@/lib/sound";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,11 @@ import { cn } from "@/lib/utils";
 export function SetupForm({ onBegin }: { onBegin: () => void }) {
   const settings = useExperience((s) => s.settings);
   const updateSettings = useExperience((s) => s.updateSettings);
+  const addReason = useExperience((s) => s.addReason);
+  const removeReason = useExperience((s) => s.removeReason);
+  const photos = usePhotos((s) => s.photos);
+  const addPhoto = usePhotos((s) => s.addPhoto);
+  const removePhoto = usePhotos((s) => s.removePhoto);
   const [showExtras, setShowExtras] = useState(false);
   const [touched, setTouched] = useState(false);
 
@@ -105,6 +111,16 @@ export function SetupForm({ onBegin }: { onBegin: () => void }) {
                     style={{ background: t.sky, backgroundSize: "cover" }}
                   >
                     <div className="absolute inset-0 bg-black/30" />
+                    {/* particle color swatches */}
+                    <div className="absolute right-1.5 top-1.5 flex gap-0.5">
+                      {t.particles.slice(0, 3).map((c, ci) => (
+                        <span
+                          key={ci}
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{ background: c, boxShadow: `0 0 4px ${c}` }}
+                        />
+                      ))}
+                    </div>
                     <div className="relative">
                       <div className="text-2xl">{t.cursorEmoji}</div>
                       <div className="mt-1 text-[11px] font-medium text-white">
@@ -114,6 +130,15 @@ export function SetupForm({ onBegin }: { onBegin: () => void }) {
                   </button>
                 ))}
               </div>
+              {/* Selected theme description */}
+              <motion.p
+                key={settings.theme}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 font-script text-sm text-white/60"
+              >
+                {THEME_LIST.find((t) => t.key === settings.theme)?.description}
+              </motion.p>
             </div>
 
             {/* Extras toggle */}
@@ -204,6 +229,20 @@ export function SetupForm({ onBegin }: { onBegin: () => void }) {
                         icon={<Link2 className="h-3.5 w-3.5" />}
                       />
                     </div>
+
+                    {/* Photo upload */}
+                    <PhotoUploader
+                      photos={photos}
+                      onAdd={addPhoto}
+                      onRemove={removePhoto}
+                    />
+
+                    {/* Reasons list */}
+                    <ReasonsList
+                      reasons={settings.reasons}
+                      onAdd={addReason}
+                      onRemove={removeReason}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -321,6 +360,162 @@ function Field({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+interface PhotoUploaderProps {
+  photos: { id: string; url: string; name: string }[];
+  onAdd: (url: string, name: string) => void;
+  onRemove: (id: string) => void;
+}
+
+function PhotoUploader({ photos, onAdd, onRemove }: PhotoUploaderProps) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).slice(0, 6).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const url = URL.createObjectURL(file);
+      onAdd(url, file.name);
+    });
+    playPop();
+  };
+
+  return (
+    <div>
+      <Label className="mb-1.5 flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/50">
+        <ImagePlus className="h-3.5 w-3.5" />
+        Photos (revealed in the finale)
+      </Label>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      <div className="flex flex-wrap gap-2">
+        {photos.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="group relative h-20 w-20 overflow-hidden rounded-xl border border-white/15"
+          >
+            <img
+              src={p.url}
+              alt={p.name}
+              className="h-full w-full object-cover"
+            />
+            <button
+              onClick={() => {
+                playPop();
+                onRemove(p.id);
+              }}
+              className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              aria-label={`Remove ${p.name}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </motion.div>
+        ))}
+        {photos.length < 6 && (
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/20 text-white/40 transition-colors hover:border-[var(--rose-glow)]/50 hover:text-white/70"
+          >
+            <ImagePlus className="h-5 w-5" />
+            <span className="text-[10px]">add</span>
+          </button>
+        )}
+      </div>
+      <p className="mt-1.5 text-[11px] text-white/30">
+        Up to 6 photos. They stay in your browser only.
+      </p>
+    </div>
+  );
+}
+
+interface ReasonsListProps {
+  reasons: string[];
+  onAdd: (r: string) => void;
+  onRemove: (i: number) => void;
+}
+
+function ReasonsList({ reasons, onAdd, onRemove }: ReasonsListProps) {
+  const [draft, setDraft] = useState("");
+
+  const submit = () => {
+    const v = draft.trim();
+    if (!v) return;
+    onAdd(v);
+    setDraft("");
+    playPop();
+  };
+
+  return (
+    <div>
+      <Label className="mb-1.5 flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/50">
+        <Heart className="h-3.5 w-3.5 text-[var(--rose-glow)]" />
+        Reasons I adore you (revealed in the finale)
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          placeholder="the way you laugh at your own jokes..."
+          className="border-white/10 bg-white/5 text-white placeholder:text-white/30 focus:border-[var(--rose-glow)]"
+        />
+        <button
+          onClick={submit}
+          className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--rose-glow)]/40 bg-[var(--rose-glow)]/10 px-3 text-sm text-[var(--rose-glow)] transition-colors hover:bg-[var(--rose-glow)]/20"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+      <AnimatePresence>
+        {reasons.length > 0 && (
+          <motion.ul
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-2 space-y-1.5 overflow-hidden"
+          >
+            {reasons.map((r, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="group flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/80"
+              >
+                <span className="text-[var(--rose-glow)]">♡</span>
+                <span className="flex-1 font-script">{r}</span>
+                <button
+                  onClick={() => {
+                    playPop();
+                    onRemove(i);
+                  }}
+                  className="text-white/30 opacity-0 transition-opacity hover:text-[var(--rose-glow)] group-hover:opacity-100"
+                  aria-label="Remove reason"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

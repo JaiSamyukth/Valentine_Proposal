@@ -55,6 +55,10 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
   useEffect(() => {
     let raf = 0;
     const tick = () => {
+      let deferredScore = 0;
+      let deferredHearts = 0;
+      let deferredGolden = 0;
+      let deferredMissed = 0;
       setItems((arr) => {
         const next: Falling[] = [];
         let addScore = 0;
@@ -77,14 +81,20 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
           }
           next.push({ ...it, y: ny });
         }
-        if (addScore) {
-          setScore((s) => s + addScore);
-          if (addHearts) addCollectable("heart", addHearts);
-          if (addGolden) addCollectable("goldenHeart", addGolden);
-        }
-        if (addMissed) setMissed((m) => m + addMissed);
+        deferredScore = addScore;
+        deferredHearts = addHearts;
+        deferredGolden = addGolden;
+        deferredMissed = addMissed;
         return next;
       });
+      // Apply store updates OUTSIDE the setItems updater to avoid
+      // triggering re-renders of other components during this render.
+      if (deferredScore) {
+        setScore((s) => s + deferredScore);
+        if (deferredHearts) addCollectable("heart", deferredHearts);
+        if (deferredGolden) addCollectable("goldenHeart", deferredGolden);
+      }
+      if (deferredMissed) setMissed((m) => m + deferredMissed);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

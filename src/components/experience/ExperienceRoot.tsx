@@ -19,6 +19,8 @@ import { MuteButton } from "./MuteButton";
 import { CosmicEasterEggs } from "./CosmicEasterEggs";
 import { LoveOSOverlay } from "./LoveOSOverlay";
 import { MusicPlayer } from "./MusicPlayer";
+import { DeveloperRoom } from "./DeveloperRoom";
+import { RetroChaosMode } from "./RetroChaosMode";
 
 export function ExperienceRoot() {
   const phase = useExperience((s) => s.phase);
@@ -113,7 +115,9 @@ export function ExperienceRoot() {
       {phase !== "boot" && <MuteButton />}
       <CosmicEasterEggs />
       <LoveOSOverlay />
+      <RetroChaosMode />
       <MusicPlayer />
+      <DeveloperRoom />
       <FunnyPopups />
       <AchievementToasts />
       <SecretListener />

@@ -10,6 +10,8 @@ import { MemoryMatch } from "@/components/games/MemoryMatch";
 import { FindHiddenHeart } from "@/components/games/FindHiddenHeart";
 import { CupidArrow } from "@/components/games/CupidArrow";
 import { SpinTheWheel } from "@/components/games/SpinTheWheel";
+import { WhackAHeart } from "@/components/games/WhackAHeart";
+import { SlidingPuzzle } from "@/components/games/SlidingPuzzle";
 import { triggerFunnyPopup } from "./FunnyPopups";
 import { playChime, playFlourish, vibrate } from "@/lib/sound";
 
@@ -20,9 +22,12 @@ type SceneKind =
   | "memory"
   | "surprise"
   | "hidden"
-  | "cupid"
+  | "whack"
   | "interstitial2"
+  | "cupid"
+  | "interstitial3"
   | "wheel"
+  | "sliding"
   | "prequestion";
 
 const SCENES: SceneKind[] = [
@@ -32,9 +37,12 @@ const SCENES: SceneKind[] = [
   "memory",
   "surprise",
   "hidden",
-  "cupid",
+  "whack",
   "interstitial2",
+  "cupid",
+  "interstitial3",
   "wheel",
+  "sliding",
   "prequestion",
 ];
 
@@ -133,6 +141,31 @@ export function Journey() {
               {(handleWin) => <FindHiddenHeart onWin={handleWin} />}
             </GameScene>
           )}
+          {current === "whack" && (
+            <GameScene
+              title="Whack-a-Heart"
+              subtitle="Hearts pop up fast. Tap them before they hide again."
+              onWin={() => {
+                unlock("heartHunter");
+                addCollectable("rose", 3);
+                addCollectable("chocolate", 2);
+                playFlourish();
+                vibrate([40, 60, 40]);
+                triggerFunnyPopup("Polishing reflexes...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <WhackAHeart onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "interstitial2" && (
+            <InterstitialScene
+              emoji="🏹"
+              title="Cupid's turn."
+              body="You've proven your eyes and your memory. Now prove your aim. Cupid left his bow for you."
+              onContinue={next}
+            />
+          )}
           {current === "cupid" && (
             <GameScene
               title="Cupid's Arrow"
@@ -150,7 +183,7 @@ export function Journey() {
               {(handleWin) => <CupidArrow onWin={handleWin} />}
             </GameScene>
           )}
-          {current === "interstitial2" && (
+          {current === "interstitial3" && (
             <InterstitialScene
               emoji="🎡"
               title="One more surprise."
@@ -169,6 +202,20 @@ export function Journey() {
               }}
             >
               {(handleWin) => <SpinTheWheel onWin={handleWin} />}
+            </GameScene>
+          )}
+          {current === "sliding" && (
+            <GameScene
+              title="Reassemble the Heart"
+              subtitle="The pieces scattered. Slide them back into place to reveal the heart."
+              onWin={() => {
+                addCollectable("diamond", 2);
+                addCollectable("key", 1);
+                triggerFunnyPopup("Mending the heart...");
+                setTimeout(next, 400);
+              }}
+            >
+              {(handleWin) => <SlidingPuzzle onWin={handleWin} />}
             </GameScene>
           )}
           {current === "prequestion" && (

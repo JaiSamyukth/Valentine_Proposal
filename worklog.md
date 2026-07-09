@@ -101,3 +101,55 @@ Stage Summary:
 4. Add a "secret room" / developer room easter egg (e.g. click logo 5×).
 5. Add service worker for offline PWA support.
 6. Add hidden universes per theme (Galaxy → Black Hole → Nebula, Forest → Magic Cave, etc.).
+
+---
+Task ID: cron-round-3
+Agent: Z.ai Code (webDevReview cron)
+Task: QA current state via agent-browser, fix bugs, and add new features (more mini-games, photo upload, developer room, retro chaos mode, reasons list, styling polish).
+
+Work Log:
+- Reviewed worklog.md to understand Phase 1 + Round 2 completion (5 mini-games, cosmic easter eggs, LoveOS overlay, music player).
+- Ran QA via agent-browser: boot → setup → journey intro → Heart Catch. Confirmed zero console errors in the stable flow. Lint clean.
+- Added **Whack-a-Heart** mini-game (`src/components/games/WhackAHeart.tsx`): a 3×3 grid where hearts pop up from holes and you tap them before they hide. Golden hearts = triple. Hearts have a TTL and expire if not whacked.
+- Added **Sliding Puzzle** mini-game (`src/components/games/SlidingPuzzle.tsx`): a 3×3 sliding tile puzzle with 8 unique heart-themed emoji tiles + 1 empty. Shows a 1.8s preview of the solved image, then shuffles (guaranteed solvable via inversion-count check). Uses Framer Motion `layout` for smooth tile sliding. Fixed a design bug: the original TARGET had duplicate emojis (💖×2, 💗×2, 💝×2) which made index-mapping ambiguous and the puzzle unsolvable via BFS — changed to 9 unique emojis (💖💕💗💝❤️💞🌹✨💌).
+- Integrated both new games into the Journey flow — scenes expanded from 10 to 13: intro → Heart Catch → interstitial1 → Memory → surprise → Hidden Heart → **Whack-a-Heart** → interstitial2 (Cupid's turn) → Cupid Arrow → interstitial3 (Wheel) → Wheel of Love → **Sliding Puzzle** → prequestion.
+- Added **photo upload feature**: new `src/lib/photo-store.ts` (in-memory Zustand store for object URLs, not persisted). `PhotoUploader` component in SetupForm (up to 6 photos, drag-free, with thumbnail grid + remove buttons). Finale now reveals a polaroid-style photo gallery with staggered spring animations and random rotations.
+- Added **"Reasons I adore you" list feature**: `reasons` array in ExperienceSettings (persisted), `addReason`/`removeReason` actions in store. `ReasonsList` component in SetupForm (add via input + Enter, remove with hover X). Finale reveals reasons as a staggered animated list with ♡ bullets.
+- Added **Developer Room** secret easter egg (`src/components/experience/DeveloperRoom.tsx`): a tiny pulsing gold dot in the bottom-left corner. Click it 5× to open a secret behind-the-scenes panel showing live stats (phase, collectables, achievements, sender/receiver, theme), earned achievements as chips, secret commands hint, and credits. Confetti + flourish on unlock.
+- Added **8-bit Retro Chaos Mode** (`src/components/experience/RetroChaosMode.tsx`): a second rare chaos event (~6% chance, once per session) that briefly transforms the site into pixelated retro game mode with CRT scanlines, pixelation overlay, "★ 8-BIT MODE ★" banner, blinking "▶ PRESS START", corner score displays (1UP ♥×∞, HI-SCORE 999999), and cycling retro messages. Auto-dismisses after ~5s.
+- Added styling polish to the SetupForm theme picker: particle color swatch previews on each theme button, and a live theme description line below the picker that animates on change.
+- Fixed a critical runtime bug: `Cannot update a component (DeveloperRoom) while rendering a different component (HeartCatch/WhackAHeart)`. The games were calling `addCollectable` (Zustand store update) inside `setItems`/`setMoles` setState updaters, which synchronously re-rendered DeveloperRoom (subscribed to collectables) during the game's render. Refactored HeartCatch to defer store updates outside the `setItems` updater, and WhackAHeart's `whack` to read state directly instead of inside `setMoles`.
+- Wired DeveloperRoom + RetroChaosMode into ExperienceRoot.
+- Ran `bun run lint` → 0 errors, 0 warnings (fixed setState-in-effect in RetroChaosMode, removed unused eslint-disable directives).
+- Verified via agent-browser:
+  - Boot → setup (Alex/Jordan) → journey intro → Heart Catch (played, zero errors) ✓
+  - Whack-a-Heart (jumped to scene 6, played, WON at round 66, advanced to "Cupid's turn", zero errors) ✓
+  - Sliding Puzzle (jumped to scene 11, solved via BFS in 22 moves, advanced to pre-question, zero errors) ✓
+  - Developer Room (clicked hidden dot 5×, opened, showed stats: phase/collectables/achievements/sender/receiver/theme + achievement chips + secret commands + credits) ✓
+  - Finale with reasons (set 4 reasons + jumped to finale, message + final button + reasons list all rendered, zero errors) ✓
+  - Scene counter shows "2 / 13" confirming 13-scene journey ✓
+
+Stage Summary:
+- Journey now has **7 mini-games** (Heart Catch, Memory Match, Find Hidden Heart, Whack-a-Heart, Cupid Arrow, Spin the Wheel, Sliding Puzzle) across 13 scenes.
+- New features: photo upload (up to 6, revealed as polaroid gallery in finale), reasons-I-adore-you list (revealed in finale), Developer Room secret panel (click hidden dot 5×), 8-bit retro chaos mode (6% rare event).
+- New easter egg: Developer Room with live stats + credits + command hints.
+- Styling: theme picker now shows particle color swatches + live description; finale gallery uses staggered spring + random rotations; reasons list uses staggered slide-in.
+- Fixed critical setState-during-render runtime error in HeartCatch + WhackAHeart.
+- Fixed Sliding Puzzle solvability bug (duplicate emojis → unique emojis).
+- All lint clean. All agent-browser verified with zero console errors.
+
+## Known Limitations / Remaining Next Steps
+- 7 of the requested ~30 mini-games implemented (could add Flappy Heart, Snake-of-Roses, Treasure Hunt, Bubble Pop, etc.).
+- Voice-note upload not yet implemented (only photos).
+- Only 2 rare chaos events (LoveOS + Retro); no gravity-flip, paper/LEGO, or fake-blue-screen yet.
+- Themes change particles but full scene-skin swaps (hidden universes) not yet built.
+- No service worker / offline PWA yet (manifest exists).
+- No "secret room" beyond Developer Room (could add a portal room / museum / arcade).
+
+## Priority Recommendations for Next Phase
+1. Add 2–3 more mini-games (Flappy Heart, Bubble Pop, Treasure Hunt).
+2. Add voice-note upload (record via MediaRecorder, playback in finale).
+3. Add more rare chaos events (gravity flip, fake blue screen, paper/LEGO mode).
+4. Add hidden universes per theme (Galaxy → Black Hole, Forest → Magic Cave).
+5. Add service worker for offline PWA support.
+6. Add a portal room / museum easter egg with collectable showcase.
