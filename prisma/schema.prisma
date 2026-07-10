@@ -30,3 +30,11 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Story {
+  id        String   @id
+  config    String   // JSON-encoded ExperienceConfig
+  seed      Int      // procedural seed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

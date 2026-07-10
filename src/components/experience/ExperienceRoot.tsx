@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useExperience } from "@/lib/experience-store";
 import { AuroraLayer } from "@/components/world/AuroraLayer";
@@ -25,10 +26,24 @@ import { GravityFlipChaos } from "./GravityFlipChaos";
 import { FakeBlueScreen } from "./FakeBlueScreen";
 import { PortalRoom } from "./PortalRoom";
 
-export function ExperienceRoot() {
+interface Props {
+  /** When true, skips boot+setup and starts directly at the journey (receiver mode). */
+  receiverMode?: boolean;
+  /** Procedural seed for variation. */
+  seed?: number;
+}
+
+export function ExperienceRoot({ receiverMode = false, seed }: Props) {
   const phase = useExperience((s) => s.phase);
   const setPhase = useExperience((s) => s.setPhase);
   const settings = useExperience((s) => s.settings);
+
+  // In receiver mode, jump straight to journey
+  useEffect(() => {
+    if (receiverMode && phase === "boot") {
+      setPhase("journey");
+    }
+  }, [receiverMode, phase, setPhase]);
 
   const intensity =
     phase === "finale" ? "party" : phase === "boot" ? "calm" : "normal";
@@ -55,7 +70,7 @@ export function ExperienceRoot() {
 
       {/* Phase content */}
       <AnimatePresence mode="wait">
-        {phase === "boot" && (
+        {!receiverMode && phase === "boot" && (
           <motion.div
             key="boot"
             exit={{ opacity: 0 }}
@@ -65,7 +80,7 @@ export function ExperienceRoot() {
           </motion.div>
         )}
 
-        {phase === "setup" && (
+        {!receiverMode && phase === "setup" && (
           <motion.div
             key="setup"
             initial={{ opacity: 0 }}
@@ -128,8 +143,8 @@ export function ExperienceRoot() {
       <AchievementToasts />
       <SecretListener />
 
-      {/* Reset link (subtle, bottom) */}
-      {phase !== "boot" && phase !== "setup" && (
+      {/* Reset link (subtle, bottom) — hidden in receiver mode */}
+      {!receiverMode && phase !== "boot" && phase !== "setup" && (
         <button
           onClick={() => {
             if (confirm("Start over? This resets the experience.")) {
@@ -145,4 +160,3 @@ export function ExperienceRoot() {
     </div>
   );
 }
-

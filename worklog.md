@@ -248,3 +248,56 @@ Stage Summary:
 4. Add hidden universes per theme (Galaxy → Black Hole, Forest → Magic Cave).
 5. Add service worker for offline PWA support.
 6. Add a "love coupons" / "fortune cookie" feature in the finale.
+
+---
+Task ID: cron-round-6 (V2.0 REDESIGN)
+Agent: Z.ai Code (webDevReview cron)
+Task: Major Version 2.0 redesign — zero-input receiver experience, separate Builder Dashboard, unique link generation, procedural seeds, cinematic opening redesign, typewriter dialogue engine, AI-generated content.
+
+Work Log:
+- Reviewed worklog.md to understand V1 completion (11 mini-games, 19 scenes, photos, voice notes, 4 chaos events, Developer Room, Portal Room).
+- Ran QA via agent-browser: confirmed V1 flow stable, zero errors, lint clean.
+- **Architectural redesign**: transitioned from single-setup-form to a two-experience system using hash-based routing (`/#/builder`, `/#/story/:id`, landing at `/`).
+- Added **Prisma Story model** (`prisma/schema.prisma`) for server-side persistence — configs stored in SQLite, making links truly shareable across devices. Ran `bun run db:push`.
+- Added **Story config types + seed system** (`src/lib/story-config.ts`): full `StoryConfig` interface (names, story, media, world, gameplay, ending, secrets, AI content), `generateStoryId()`, `seedFromId()`, `makeRng()` (mulberry32 seeded PRNG).
+- Added **API routes**: `POST/GET /api/story` (create/list stories), `GET/PUT /api/story/[id]` (retrieve/update by ID). Receiver loads config via `GET /api/story/:id`.
+- Added **AI generation API** (`POST /api/ai`): uses `z-ai-web-dev-sdk` to generate love poems and compliments personalized with receiver/sender names. System prompts tuned for sincere, non-cliché output.
+- Added **hash-based router** (`src/lib/router.ts`): `useRouter()` hook detecting landing/builder/story modes, `navigate()`, `storyUrl()` for shareable links.
+- Added **Builder Dashboard** (`src/components/builder/BuilderDashboard.tsx`): a rich sender editor with sections for names, theme picker, atmosphere (weather, particle intensity), story & message, AI poem/compliment generation (with loading spinners), mini-games selection (11 toggleable), ending style, confetti style, secrets, music links. "Generate unique link" button saves to DB and shows a copyable shareable URL + preview button.
+- Added **TypewriterDialogue engine** (`src/components/experience/TypewriterDialogue.tsx`): cinematic typewriter with variable speed per segment, pauses before emotional words, longer pauses after punctuation, blinking cursor, click-to-skip, emotion-tagged segments, optional typing sounds.
+- Added **ReceiverOpening** (`src/components/experience/ReceiverOpening.tsx`): redesigned zero-input cinematic opening — black screen → heartbeat → "Searching the universe..." → "Scanning memories..." → "Locating one special person..." → "Receiver located." (shows receiver name) → "Opening Memory Portal..." → "Welcome, {name}" → "Someone spent an unreasonable amount of time creating this world just for you." → "Loading butterflies..." progress bar → entrance.
+- Added **ReceiverExperience** (`src/components/experience/ReceiverExperience.tsx`): loads config from API by story ID, shows the cinematic opening, then transitions to the journey. Error state for invalid links.
+- Added **Landing page** (`src/components/experience/Landing.tsx`): entry point with "Build a world they'll never forget" CTA, feature grid, confetti on click.
+- Updated **ExperienceRoot** to accept `receiverMode` + `seed` props — in receiver mode, skips boot+setup and jumps straight to journey (zero-input).
+- Updated **page.tsx** to route between Landing / Builder / Receiver based on hash.
+- Ran `bun run lint` → 0 errors, 0 warnings (removed 2 unused eslint-disable directives).
+- Verified via agent-browser end-to-end:
+  - Landing renders ("Build a world they'll never forget") ✓
+  - Builder dashboard renders, filled names (Alex/Jordan), generated link → `/#/story/R3MHE9Q5` (POST /api/story 200) ✓
+  - Opened receiver link → loaded config from API (GET /api/story/R3MHE9Q5 200) → cinematic opening played ("Searching the universe..." → "Receiver located." → "Welcome, Jordan") → journey intro with personalized name ✓
+  - Zero console errors throughout ✓
+
+Stage Summary:
+- **V2.0 architecture complete**: two separate experiences (Builder + Receiver) with hash-based routing, server-side persistence via Prisma/SQLite, shareable unique links.
+- **Zero-input receiver experience**: receiver opens link, config loads from API, cinematic opening plays immediately — never asked for any information.
+- **Builder Dashboard**: full editor with names, theme, atmosphere, story, AI poem/compliment generation, mini-games selection, ending/confetti styles, secrets, music.
+- **Procedural seed system**: each story ID generates a deterministic seed for variation.
+- **Typewriter dialogue engine**: reusable cinematic component with variable speed, pauses, emotions.
+- **AI integration**: z-ai-web-dev-sdk generates personalized poems and compliments.
+- All lint clean. All agent-browser verified with zero console errors.
+
+## Known Limitations / Remaining Next Steps
+- Photos uploaded in builder aren't yet persisted to the DB (only URLs stored; need to upload blobs or use base64).
+- Procedural seed is generated but not yet wired into weather/particle/NPC variations (foundation laid).
+- TypewriterDialogue component built but not yet integrated into all dialogue scenes (opening uses its own inline typewriter).
+- Dynamic personalization (name in stars/clouds/fireflies) not yet added beyond the existing constellation canvas.
+- Mini-games selection in builder doesn't yet filter the actual journey scenes (all 11 still play).
+- Voice notes not yet recordable in builder (only in the old setup form).
+
+## Priority Recommendations for Next Phase
+1. Wire procedural seed into weather, particle, and NPC variations.
+2. Integrate TypewriterDialogue into all journey scenes + question.
+3. Filter journey scenes based on builder's mini-games selection.
+4. Add voice-note recording to the builder dashboard.
+5. Add dynamic personalization (receiver name in stars, clouds, fireflies).
+6. Persist photos to DB (base64 or blob upload).
