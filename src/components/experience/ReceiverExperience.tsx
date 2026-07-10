@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import type { StoryConfig } from "@/lib/story-config";
 import { ReceiverOpening } from "./ReceiverOpening";
 import { ExperienceRoot } from "./ExperienceRoot";
 import { useExperience } from "@/lib/experience-store";
+import { useProgressReporter } from "@/hooks/use-progress-reporter";
 
 interface Props {
   storyId: string;
@@ -21,6 +21,32 @@ export function ReceiverExperience({ storyId }: Props) {
   const [opened, setOpened] = useState(false);
   const updateSettings = useExperience((s) => s.updateSettings);
 
+  // Track progress for the sender
+  const phase = useExperience((s) => s.phase);
+  const scene = useExperience((s) => s.currentScene);
+  const yesPressed = useExperience((s) => s.yesPressed);
+  const completed = phase === "finale" && yesPressed;
+
+  // Report "opened" immediately when the config loads
+  useEffect(() => {
+    if (state === "loaded" && config) {
+      fetch(`/api/story/${storyId}/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phase: "opening" }),
+      }).catch(() => {});
+    }
+  }, [state, config, storyId]);
+
+  // Report ongoing progress
+  useProgressReporter(
+    storyId,
+    opened ? phase : "opening",
+    scene,
+    yesPressed,
+    completed
+  );
+
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/story/${storyId}`)
@@ -32,7 +58,6 @@ export function ReceiverExperience({ storyId }: Props) {
         if (cancelled) return;
         setConfig(data.config);
         setSeed(data.seed);
-        // hydrate the experience store with the loaded config
         updateSettings({
           senderName: data.config.senderName,
           receiverName: data.config.receiverName,
@@ -45,6 +70,8 @@ export function ReceiverExperience({ storyId }: Props) {
           secretCode: data.config.secretCode,
           spotifyUrl: data.config.spotifyUrl,
           youtubeUrl: data.config.youtubeUrl,
+          reasons: data.config.reasons || [],
+          timeline: data.config.timeline || [],
         });
         setState("loaded");
       })
@@ -54,7 +81,7 @@ export function ReceiverExperience({ storyId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [storyId]);
+  }, [storyId, updateSettings]);
 
   if (state === "loading") {
     return (

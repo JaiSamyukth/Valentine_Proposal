@@ -30,10 +30,6 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
   const areaRef = useRef<HTMLDivElement>(null);
   const winTarget = 12;
 
-  useEffect(() => {
-    paddleXRef.current = paddleX;
-  }, [paddleX]);
-
   const spawn = useCallback(() => {
     const golden = Math.random() < 0.12;
     const item: Falling = {
@@ -67,7 +63,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
         let addMissed = 0;
         for (const it of arr) {
           const ny = it.y + it.vy;
-          if (ny > 86 && ny < 96 && Math.abs(it.x - paddleXRef.current) < 9) {
+          if (ny > 84 && ny < 100 && Math.abs(it.x - paddleXRef.current) < 12) {
             addScore += it.golden ? 3 : 1;
             if (it.golden) addGolden++;
             else addHearts++;
@@ -75,7 +71,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
             if (it.golden) vibrate(30);
             continue;
           }
-          if (ny > 102) {
+          if (ny > 105) {
             addMissed += 1;
             continue;
           }
@@ -112,7 +108,11 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
     const rect = areaRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = ((clientX - rect.left) / rect.width) * 100;
-    setPaddleX(Math.max(5, Math.min(95, x)));
+    const clamped = Math.max(5, Math.min(95, x));
+    // Update the ref DIRECTLY so the RAF loop sees it immediately,
+    // not one render later.
+    paddleXRef.current = clamped;
+    setPaddleX(clamped);
   };
 
   return (

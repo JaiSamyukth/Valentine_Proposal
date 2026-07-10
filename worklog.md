@@ -301,3 +301,47 @@ Stage Summary:
 4. Add voice-note recording to the builder dashboard.
 5. Add dynamic personalization (receiver name in stars, clouds, fireflies).
 6. Persist photos to DB (base64 or blob upload).
+
+---
+Task ID: cron-round-7 (bugfix + receiver tracking)
+Agent: Z.ai Code (webDevReview cron)
+Task: Fix heart-catching not being counted + add receiver tracking so sender knows whether the link was opened/completed.
+
+Work Log:
+- **Bug fix: Heart Catch not counting.** Root cause: (1) `paddleXRef` was updated via a post-render `useEffect` instead of directly in the `onMove` handler, causing a 1-frame delay where the RAF loop read stale paddle positions. (2) The catch zone (y 86-96%) didn't reach the paddle's actual position at `bottom-2` (~98%), so hearts fell past the paddle without being caught. Fix: update `paddleXRef.current` directly in `onMove` (eliminating the delay), widen the catch zone to `ny > 84 && ny < 100`, increase catch radius from 9 to 12, and extend the miss threshold to `ny > 105`. Verified by dispatching real MouseEvent objects — score incremented from 0 to 1.
+- **Feature: Receiver tracking.** The sender now knows whether the receiver opened the link and how far they got.
+  - Added `StoryView` Prisma model: `storyId`, `openedAt`, `lastSeenAt`, `completedAt`, `currentPhase`, `currentScene`, `yesPressed`, `userAgent`.
+  - Added `POST /api/story/[id]/progress` — receiver reports phase/scene/yesPressed/completed. Creates a new view session on first open, updates the existing session on subsequent calls (within 30-min window). Phase only advances, never regresses.
+  - Added `GET /api/story/[id]/status` — returns `totalViews`, `completions`, `latestView` (with phase, scene, timestamps, yesPressed), and `allViews` array.
+  - Added `useProgressReporter` hook — fires on every phase/scene/yesPressed/completed change, best-effort POST to the progress API.
+  - Wired into `ReceiverExperience` — reports "opening" on config load, then ongoing progress as the receiver moves through the journey → question → finale.
+  - Added `StoryStatus` component in the Builder Dashboard — shows a live "Receiver activity" panel with: total views, completions, latest view phase (with emoji + progress bar), "opened Xm ago" / "last seen Xm ago", "said yes!" badge, "done" badge, and a list of all sessions. Auto-refreshes every 15s + manual refresh button.
+- Fixed router hydration issue — switched from `useState` + `useEffect` to `useSyncExternalStore` for proper SSR + client hash routing without setState-in-effect lint violations.
+- Ran `bun run lint` → 0 errors, 0 warnings.
+- Verified via agent-browser:
+  - Builder → generated link `/#/story/HWZ3HA8A` ✓
+  - Status panel shows "No one has opened this link yet." before receiver opens ✓
+  - Opened receiver link → cinematic opening played → "Welcome, Jordan" → journey ✓
+  - `GET /api/story/HWZ3HA8A/status` returns `totalViews:1, currentPhase:"journey", currentScene:1` — sender can see the receiver opened the link and is at scene 1 ✓
+  - Heart Catch: dispatched real MouseEvent objects → score incremented to 1 (fix confirmed) ✓
+
+Stage Summary:
+- **Heart Catch bug fixed**: paddle ref updated directly in handler (no delay), catch zone widened to 84-100%, radius increased to 12. Hearts now count reliably.
+- **Receiver tracking complete**: sender sees total views, completions, current phase/scene, yesPressed, timestamps — all in a live auto-refreshing panel in the Builder Dashboard.
+- Router fixed with `useSyncExternalStore` for proper SSR + hash routing.
+- All lint clean. All agent-browser verified.
+
+## Known Limitations / Remaining Next Steps
+- Photos uploaded in builder aren't yet persisted to the DB (only URLs stored).
+- Procedural seed is generated but not yet wired into weather/particle/NPC variations.
+- TypewriterDialogue component built but not yet integrated into all dialogue scenes.
+- Mini-games selection in builder doesn't yet filter the actual journey scenes.
+- Voice notes not yet recordable in builder.
+
+## Priority Recommendations for Next Phase
+1. Wire procedural seed into weather, particle, and NPC variations.
+2. Integrate TypewriterDialogue into all journey scenes + question.
+3. Filter journey scenes based on builder's mini-games selection.
+4. Add voice-note recording to the builder dashboard.
+5. Add dynamic personalization (receiver name in stars, clouds, fireflies).
+6. Persist photos to DB (base64 or blob upload).

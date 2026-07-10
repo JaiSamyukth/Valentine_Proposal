@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import type { StoryConfig } from "@/lib/story-config";
 import { DEFAULT_STORY_CONFIG } from "@/lib/story-config";
 import { storyUrl, navigate } from "@/lib/router";
+import { StoryStatus } from "./StoryStatus";
 
 const MINI_GAMES = [
   { key: "heartcatch", label: "Heart Catch", emoji: "🧺" },
@@ -557,6 +558,11 @@ export function BuilderDashboard() {
                     Opening this link begins their experience immediately — zero
                     inputs, everything pre-configured.
                   </p>
+                </div>
+
+                {/* Receiver activity tracking */}
+                <div className="mt-4">
+                  <StoryStatus storyId={storyId} />
                 </div>
               </motion.div>
             )}

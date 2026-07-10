@@ -38,3 +38,15 @@ model Story {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model StoryView {
+  id          String   @id @default(cuid())
+  storyId     String
+  openedAt    DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+  completedAt DateTime?
+  currentPhase String  @default("opening") // opening, journey, question, finale, done
+  currentScene Int     @default(0)
+  yesPressed  Boolean  @default(false)
+  userAgent   String?
+}
