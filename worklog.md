@@ -345,3 +345,39 @@ Stage Summary:
 4. Add voice-note recording to the builder dashboard.
 5. Add dynamic personalization (receiver name in stars, clouds, fireflies).
 6. Persist photos to DB (base64 or blob upload).
+
+---
+Task ID: cron-round-8 (dynamic journey + personalization + seed)
+Agent: Z.ai Code (webDevReview cron)
+Task: Filter journey by builder's game selection, add dynamic name-in-stars personalization, wire procedural seed into particles, add AI poem/compliment to finale, fix router hydration.
+
+Work Log:
+- **Dynamic journey filtering**: Refactored Journey.tsx from a hardcoded 19-scene list to a dynamic scene builder. Created a GAME_REGISTRY with all 11 games (key, title, subtitle, interstitial, rewards). The Journey now builds its scene list from `settings.miniGames` — only selected games appear, each preceded by an interstitial. If no selection, defaults to all 11. Added `miniGames`, `aiPoem`, `aiCompliment` to ExperienceSettings + DEFAULT_SETTINGS. Updated ReceiverExperience to hydrate these from the loaded config. The sender's game selection in the builder now actually controls which games the receiver plays.
+- **Dynamic personalization (NameInStars)**: New component (`src/components/experience/NameInStars.tsx`) that renders the receiver's name as glowing letter-stars that fade in at a random moment (15-40s) during the journey. Each letter has a staggered spring entrance, gold glow text-shadow, and twinkling ✨ sparkles. Creates the "the website knows who I am" feeling. Wired into ExperienceRoot.
+- **Procedural seed wired into particles**: LivingBackground now accepts a `seed` prop. Uses mulberry32 PRNG to vary the base particle count by ±20% per story. ExperienceRoot passes the seed to LivingBackground. Same story ID → same particle density every visit; different story IDs → different densities.
+- **AI poem + compliment in finale**: Finale now reveals the AI-generated poem (in a glass-strong card with "✨ a poem, written for you ✨" header) and compliment (as a rose-glow italic quote) after the timeline, with staggered delays (2.4s + 2.8s).
+- **Router hydration fix**: Fixed `useSyncExternalStore` infinite loop — `getServerSnapshot` was returning a new object each call. Now returns a cached `SERVER_SNAPSHOT` constant. Also cached `getSnapshot` result by hash string to avoid recomputation. This was causing "Maximum update depth exceeded" crashes on page load.
+- Ran `bun run lint` → 0 errors, 0 warnings.
+- Verified via agent-browser: Landing renders without infinite loop ✓, Builder renders + link generated ✓, Receiver opening + journey with dynamically filtered scenes ✓, Heart Catch renders ✓, Zero console errors ✓.
+
+Stage Summary:
+- Journey now dynamic: only plays the sender's selected mini-games (was hardcoded to all 11).
+- Name-in-stars personalization: receiver's name glows in the sky at a random moment.
+- Procedural seed: particle density varies per story ID (±20%).
+- AI content in finale: poem + compliment revealed with staggered animations.
+- Router fixed: no more hydration infinite loops.
+- All lint clean. All agent-browser verified with zero console errors.
+
+## Known Limitations / Remaining Next Steps
+- TypewriterDialogue component built but not yet integrated into all dialogue scenes.
+- Voice notes not yet recordable in builder.
+- Photos not yet persisted to DB.
+- NPC behavior not yet seed-varied (only particle count is).
+
+## Priority Recommendations for Next Phase
+1. Integrate TypewriterDialogue into all journey scenes + question.
+2. Add voice-note recording to the builder dashboard.
+3. Persist photos to DB (base64 or blob upload).
+4. Wire seed into NPC behavior + weather variations.
+5. Add hidden universes per theme.
+6. Add service worker for offline PWA support.

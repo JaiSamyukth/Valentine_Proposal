@@ -28,6 +28,9 @@ export interface ExperienceSettings {
   youtubeUrl: string;
   reasons: string[];
   timeline: { date: string; title: string; emoji: string }[];
+  miniGames: string[];
+  aiPoem: string;
+  aiCompliment: string;
 }
 
 export type CollectableKey =
@@ -98,6 +101,9 @@ const DEFAULT_SETTINGS: ExperienceSettings = {
   youtubeUrl: "",
   reasons: [],
   timeline: [],
+  miniGames: ["heartcatch", "memory", "hidden", "whack", "cupid", "wheel", "sliding", "bubble", "treasure", "reaction", "bouquet"],
+  aiPoem: "",
+  aiCompliment: "",
 };
 
 const DEFAULT_COLLECTABLES: Record<CollectableKey, number> = {

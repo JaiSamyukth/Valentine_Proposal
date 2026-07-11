@@ -72,6 +72,9 @@ export function ReceiverExperience({ storyId }: Props) {
           youtubeUrl: data.config.youtubeUrl,
           reasons: data.config.reasons || [],
           timeline: data.config.timeline || [],
+          miniGames: data.config.miniGames || [],
+          aiPoem: data.config.aiPoem || "",
+          aiCompliment: data.config.aiCompliment || "",
         });
         setState("loaded");
       })

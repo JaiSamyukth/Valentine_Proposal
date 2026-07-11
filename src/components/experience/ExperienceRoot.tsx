@@ -25,6 +25,7 @@ import { RetroChaosMode } from "./RetroChaosMode";
 import { GravityFlipChaos } from "./GravityFlipChaos";
 import { FakeBlueScreen } from "./FakeBlueScreen";
 import { PortalRoom } from "./PortalRoom";
+import { NameInStars } from "./NameInStars";
 
 interface Props {
   /** When true, skips boot+setup and starts directly at the journey (receiver mode). */
@@ -54,7 +55,7 @@ export function ExperienceRoot({ receiverMode = false, seed }: Props) {
       {phase !== "boot" && (
         <>
           <AuroraLayer theme={settings.theme} />
-          <LivingBackground theme={settings.theme} intensity={intensity} />
+          <LivingBackground theme={settings.theme} intensity={intensity} seed={seed} />
           <CursorTrail />
         </>
       )}
@@ -132,6 +133,7 @@ export function ExperienceRoot({ receiverMode = false, seed }: Props) {
       {phase !== "boot" && <HUD />}
       {phase !== "boot" && <MuteButton />}
       <CosmicEasterEggs />
+      <NameInStars />
       <LoveOSOverlay />
       <RetroChaosMode />
       <GravityFlipChaos />

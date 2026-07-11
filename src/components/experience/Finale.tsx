@@ -292,6 +292,37 @@ export function Finale() {
               </motion.div>
             )}
 
+            {/* AI-generated poem reveal */}
+            {showButton && settings.aiPoem && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.4 }}
+                className="mt-8 w-full max-w-xl rounded-2xl glass-strong p-6"
+              >
+                <p className="mb-3 text-center text-xs uppercase tracking-[0.25em] text-[var(--gold)]">
+                  ✨ a poem, written for you ✨
+                </p>
+                <p className="whitespace-pre-line text-center font-script text-xl italic leading-relaxed text-white/85">
+                  {settings.aiPoem}
+                </p>
+              </motion.div>
+            )}
+
+            {/* AI-generated compliment reveal */}
+            {showButton && settings.aiCompliment && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 2.8 }}
+                className="mt-4 max-w-xl"
+              >
+                <p className="text-center font-script text-lg text-[var(--rose-glow)]">
+                  &ldquo;{settings.aiCompliment}&rdquo;
+                </p>
+              </motion.div>
+            )}
+
             <AnimatePresence>
               {showButton && (
                 <motion.button

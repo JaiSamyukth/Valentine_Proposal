@@ -23,13 +23,27 @@ interface Particle {
 interface Props {
   theme: ThemeKey;
   intensity?: "calm" | "normal" | "party";
+  /** Procedural seed — varies particle counts, speeds, and creature mix. */
+  seed?: number;
 }
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function LivingBackground({ theme, intensity = "normal" }: Props) {
+/** Seeded PRNG (mulberry32) for deterministic variation per story. */
+function makeRng(seed: number): () => number {
+  let a = seed || 1;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function LivingBackground({ theme, intensity = "normal", seed }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const particlesRef = useRef<Particle[]>([]);
@@ -65,9 +79,11 @@ export function LivingBackground({ theme, intensity = "normal" }: Props) {
 
     const densityFactor =
       intensity === "calm" ? 0.5 : intensity === "party" ? 1.6 : 1;
-    const baseCount = Math.min(
-      130,
-      Math.floor((w * h) / 14000) * densityFactor
+    // Seed varies the base count by ±20% for procedural variation per story
+    const rng = makeRng(seed || 0);
+    const seedVariance = 0.8 + rng() * 0.4; // 0.8 - 1.2
+    const baseCount = Math.floor(
+      Math.min(130, Math.floor((w * h) / 14000) * densityFactor) * seedVariance
     );
 
     const spawn = (type: Particle["type"]): Particle => {

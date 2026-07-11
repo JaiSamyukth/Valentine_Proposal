@@ -22,17 +22,26 @@ function parseHash(): RouteState {
 
 // useSyncExternalStore: subscribe to hashchange, getSnapshot reads the hash.
 // This avoids setState-in-effect and handles SSR correctly.
+// IMPORTANT: getServerSnapshot must return a cached value to avoid infinite loops.
+const SERVER_SNAPSHOT: RouteState = { mode: "landing" };
+let cachedSnapshot: RouteState | null = null;
+let cachedHash = "";
+
 function subscribe(callback: () => void): () => void {
   window.addEventListener("hashchange", callback);
   return () => window.removeEventListener("hashchange", callback);
 }
 
 function getSnapshot(): RouteState {
-  return parseHash();
+  const hash = window.location.hash;
+  if (cachedSnapshot && hash === cachedHash) return cachedSnapshot;
+  cachedHash = hash;
+  cachedSnapshot = parseHash();
+  return cachedSnapshot;
 }
 
 function getServerSnapshot(): RouteState {
-  return { mode: "landing" };
+  return SERVER_SNAPSHOT;
 }
 
 export function useRouter(): RouteState {
