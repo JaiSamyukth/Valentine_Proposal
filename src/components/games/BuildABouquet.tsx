@@ -35,6 +35,8 @@ export function BuildABouquet({ onWin }: Props) {
   const [bouquet, setBouquet] = useState<Flower[]>([]);
   const idRef = useRef(0);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   // spawn a fresh garden
   useEffect(() => {
@@ -57,7 +59,7 @@ export function BuildABouquet({ onWin }: Props) {
       addCollectable("flower", 5);
       playFlourish();
       vibrate([40, 60, 40]);
-      setTimeout(() => onWin(), 1400);
+      setTimeout(() => onWinRef.current(), 1400);
     }
   }, [bouquet.length, addCollectable, onWin]);
 

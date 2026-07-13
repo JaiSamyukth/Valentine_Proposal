@@ -39,6 +39,8 @@ export function CupidArrow({ onWin }: Props) {
   const idRef = useRef(0);
   const arrowIdRef = useRef(0);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
   const areaRef = useRef<HTMLDivElement>(null);
   const aimRef = useRef(aim);
   const lastShotRef = useRef(0);
@@ -135,7 +137,7 @@ export function CupidArrow({ onWin }: Props) {
   useEffect(() => {
     if (score >= WIN_TARGET && !wonRef.current) {
       wonRef.current = true;
-      setTimeout(() => onWin(), 600);
+      setTimeout(() => onWinRef.current(), 600);
     }
   }, [score, onWin]);
 

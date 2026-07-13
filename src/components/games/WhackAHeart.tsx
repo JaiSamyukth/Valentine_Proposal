@@ -28,31 +28,35 @@ export function WhackAHeart({ onWin }: Props) {
   const [score, setScore] = useState(0);
   const [missed, setMissed] = useState(0);
   const idRef = useRef(0);
+  const molesRef = useRef<Mole[]>([]);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   const spawn = useCallback(() => {
-    setMoles((current) => {
-      // don't overcrowd
-      if (current.length >= 4) return current;
-      const occupied = new Set(current.map((m) => m.hole));
-      let hole = Math.floor(Math.random() * HOLES);
-      let tries = 0;
-      while (occupied.has(hole) && tries < 10) {
-        hole = Math.floor(Math.random() * HOLES);
-        tries++;
-      }
-      if (occupied.has(hole)) return current;
-      const golden = Math.random() < 0.12;
-      const mole: Mole = {
-        id: idRef.current++,
-        hole,
-        emoji: golden ? "💛" : EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-        golden,
-        born: performance.now(),
-        ttl: golden ? 1100 : 1400,
-      };
-      return [...current, mole];
-    });
+    const current = molesRef.current;
+    // don't overcrowd
+    if (current.length >= 4) return;
+    const occupied = new Set(current.map((m) => m.hole));
+    let hole = Math.floor(Math.random() * HOLES);
+    let tries = 0;
+    while (occupied.has(hole) && tries < 10) {
+      hole = Math.floor(Math.random() * HOLES);
+      tries++;
+    }
+    if (occupied.has(hole)) return;
+    const golden = Math.random() < 0.12;
+    const mole: Mole = {
+      id: idRef.current++,
+      hole,
+      emoji: golden ? "💛" : EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+      golden,
+      born: performance.now(),
+      ttl: golden ? 1100 : 1400,
+    };
+    const next = [...current, mole];
+    molesRef.current = next;
+    setMoles(next);
   }, []);
 
   useEffect(() => {
@@ -64,19 +68,20 @@ export function WhackAHeart({ onWin }: Props) {
   useEffect(() => {
     const expire = setInterval(() => {
       const now = performance.now();
-      setMoles((current) => {
-        const survivors: Mole[] = [];
-        let addMissed = 0;
-        for (const m of current) {
-          if (now - m.born > m.ttl) {
-            addMissed++;
-          } else {
-            survivors.push(m);
-          }
+      let expiredCount = 0;
+      const survivors: Mole[] = [];
+      for (const m of molesRef.current) {
+        if (now - m.born > m.ttl) {
+          expiredCount++;
+        } else {
+          survivors.push(m);
         }
-        if (addMissed) setMissed((x) => x + addMissed);
-        return survivors;
-      });
+      }
+      if (expiredCount > 0) {
+        molesRef.current = survivors;
+        setMoles(survivors);
+        setMissed((x) => x + expiredCount);
+      }
     }, 150);
     return () => clearInterval(expire);
   }, []);
@@ -84,12 +89,12 @@ export function WhackAHeart({ onWin }: Props) {
   useEffect(() => {
     if (score >= WIN_TARGET && !wonRef.current) {
       wonRef.current = true;
-      setTimeout(() => onWin(), 600);
+      setTimeout(() => onWinRef.current(), 600);
     }
   }, [score, onWin]);
 
   const whack = (id: number) => {
-    const mole = moles.find((m) => m.id === id);
+    const mole = molesRef.current.find((m) => m.id === id);
     if (!mole) return;
     const points = mole.golden ? 3 : 1;
     setScore((s) => s + points);
@@ -97,7 +102,9 @@ export function WhackAHeart({ onWin }: Props) {
     else addCollectable("heart", 1);
     playChime(mole.golden ? 1300 : 900, 0.3);
     vibrate(mole.golden ? 30 : 15);
-    setMoles((current) => current.filter((m) => m.id !== id));
+    const next = molesRef.current.filter((m) => m.id !== id);
+    molesRef.current = next;
+    setMoles(next);
   };
 
   return (

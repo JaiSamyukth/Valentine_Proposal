@@ -33,6 +33,8 @@ export function BubblePop({ onWin }: Props) {
   const idRef = useRef(0);
   const bubblesRef = useRef<Bubble[]>([]);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   useEffect(() => {
     bubblesRef.current = bubbles;
@@ -60,25 +62,25 @@ export function BubblePop({ onWin }: Props) {
     return () => clearInterval(spawnInt);
   }, [spawn]);
 
-  // Movement + escape detection in a single RAF loop
+  // Movement + escape detection — use refs, not setState updaters
   useEffect(() => {
     let raf = 0;
     const tick = () => {
+      const arr = bubblesRef.current;
+      const next: Bubble[] = [];
       let addEscaped = 0;
-      setBubbles((arr) => {
-        const next: Bubble[] = [];
-        for (const b of arr) {
-          if (b.popped) continue;
-          const ny = b.y + b.vy;
-          const nx = b.x + b.vx + Math.sin(b.phase + ny * 0.05) * 0.1;
-          if (ny < -8) {
-            addEscaped++;
-            continue;
-          }
-          next.push({ ...b, y: ny, x: nx, phase: b.phase + 0.02 });
+      for (const b of arr) {
+        if (b.popped) continue;
+        const ny = b.y + b.vy;
+        const nx = b.x + b.vx + Math.sin(b.phase + ny * 0.05) * 0.1;
+        if (ny < -8) {
+          addEscaped++;
+          continue;
         }
-        return next;
-      });
+        next.push({ ...b, y: ny, x: nx, phase: b.phase + 0.02 });
+      }
+      bubblesRef.current = next;
+      setBubbles(next);
       if (addEscaped) setEscaped((e) => e + addEscaped);
       raf = requestAnimationFrame(tick);
     };
@@ -89,7 +91,7 @@ export function BubblePop({ onWin }: Props) {
   useEffect(() => {
     if (score >= WIN_TARGET && !wonRef.current) {
       wonRef.current = true;
-      setTimeout(() => onWin(), 600);
+      setTimeout(() => onWinRef.current(), 600);
     }
   }, [score, onWin]);
 
@@ -104,11 +106,16 @@ export function BubblePop({ onWin }: Props) {
     if (bubble.emoji === "🌸") addCollectable("flower", 1);
     playPop();
     vibrate(bubble.golden ? 30 : 15);
-    setBubbles((arr) =>
-      arr.map((b) => (b.id === id ? { ...b, popped: true } : b))
+    // Update ref + state directly
+    const marked = bubblesRef.current.map((b) =>
+      b.id === id ? { ...b, popped: true } : b
     );
+    bubblesRef.current = marked;
+    setBubbles(marked);
     setTimeout(() => {
-      setBubbles((arr) => arr.filter((b) => b.id !== id));
+      const filtered = bubblesRef.current.filter((b) => b.id !== id);
+      bubblesRef.current = filtered;
+      setBubbles(filtered);
     }, 200);
   };
 

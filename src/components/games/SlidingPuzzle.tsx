@@ -52,6 +52,8 @@ export function SlidingPuzzle({ onWin }: Props) {
   const [tiles, setTiles] = useState<number[]>(() => shuffle());
   const [moves, setMoves] = useState(0);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   const solved = useMemo(() => isSolved(tiles), [tiles]);
 
@@ -84,7 +86,7 @@ export function SlidingPuzzle({ onWin }: Props) {
       addCollectable("key", 1);
       playFlourish();
       vibrate([40, 60, 40]);
-      setTimeout(() => onWin(), 1100);
+      setTimeout(() => onWinRef.current(), 1100);
     }
   }, [solved, addCollectable, onWin]);
 

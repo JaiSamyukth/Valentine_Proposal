@@ -15,6 +15,8 @@ export function FindHiddenHeart({ onWin }: Props) {
   const addCollectable = useExperience((s) => s.addCollectable);
   const unlock = useExperience((s) => s.unlockAchievement);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   // Generate a stable grid: 24 tiles, one hidden heart at a random spot
   const { tiles, heartIndex } = useMemo(() => {
@@ -50,7 +52,7 @@ export function FindHiddenHeart({ onWin }: Props) {
       unlock("hiddenFinder");
       playChime(1200, 0.6);
       vibrate([40, 60, 40]);
-      setTimeout(onWin, 1200);
+      setTimeout(() => onWinRef.current(), 1200);
     } else {
       // distance hint
       const dx = Math.abs((i % 6) - (heartIndex % 6));

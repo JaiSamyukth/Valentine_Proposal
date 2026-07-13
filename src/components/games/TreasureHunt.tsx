@@ -64,6 +64,8 @@ export function TreasureHunt({ onWin }: Props) {
   const [digsLeft, setDigsLeft] = useState(TOTAL_DIGS_ALLOWED);
   const [hint, setHint] = useState<string>("");
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   const rewardAt = useMemo(() => REWARDS, []);
 
@@ -85,7 +87,7 @@ export function TreasureHunt({ onWin }: Props) {
       addCollectable("coin", 5);
       playFlourish();
       vibrate([60, 80, 60]);
-      setTimeout(() => onWin(), 1300);
+      setTimeout(() => onWinRef.current(), 1300);
     } else {
       // grant reward + consume a dig
       setDigsLeft((d) => d - 1);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { useExperience } from "@/lib/experience-store";
@@ -23,12 +23,22 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
   const [missed, setMissed] = useState(0);
   const [items, setItems] = useState<Falling[]>([]);
   const [paddleX, setPaddleX] = useState(50);
+  const [, forceRender] = useReducer((x) => x + 1, 0);
 
   const idRef = useRef(0);
+  const itemsRef = useRef<Falling[]>([]);
   const paddleXRef = useRef(50);
+  const scoreRef = useRef(0);
   const wonRef = useRef(false);
   const areaRef = useRef<HTMLDivElement>(null);
+  const onWinRef = useRef(onWin);
+  const addCollectableRef = useRef(addCollectable);
   const winTarget = 8;
+
+  useEffect(() => {
+    onWinRef.current = onWin;
+    addCollectableRef.current = addCollectable;
+  });
 
   const spawn = useCallback(() => {
     const golden = Math.random() < 0.12;
@@ -36,11 +46,11 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
       id: idRef.current++,
       x: 8 + Math.random() * 84,
       y: -5,
-      vy: 0.18 + Math.random() * 0.22,
+      vy: 0.2 + Math.random() * 0.25,
       emoji: golden ? "💛" : EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
       golden,
     };
-    setItems((arr) => [...arr, item]);
+    itemsRef.current = [...itemsRef.current, item];
   }, []);
 
   useEffect(() => {
@@ -48,69 +58,79 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
     return () => clearInterval(spawnInt);
   }, [spawn]);
 
+  // Single game loop on refs — NO setState inside the loop logic.
+  // The loop reads/writes refs, then syncs to state once per frame for rendering.
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      let deferredScore = 0;
-      let deferredHearts = 0;
-      let deferredGolden = 0;
-      let deferredMissed = 0;
-      setItems((arr) => {
-        const next: Falling[] = [];
-        let addScore = 0;
-        let addHearts = 0;
-        let addGolden = 0;
-        let addMissed = 0;
-        for (const it of arr) {
-          const ny = it.y + it.vy;
-          if (ny > 80 && ny < 105 && Math.abs(it.x - paddleXRef.current) < 18) {
-            addScore += it.golden ? 3 : 1;
-            if (it.golden) addGolden++;
-            else addHearts++;
-            playChime(it.golden ? 1200 : 800, 0.3);
-            if (it.golden) vibrate(30);
-            continue;
-          }
-          if (ny > 110) {
-            addMissed += 1;
-            continue;
-          }
-          next.push({ ...it, y: ny });
+      const arr = itemsRef.current;
+      const px = paddleXRef.current;
+      const next: Falling[] = [];
+      let addScore = 0;
+      let addHearts = 0;
+      let addGolden = 0;
+      let addMissed = 0;
+
+      for (const it of arr) {
+        const ny = it.y + it.vy;
+        // Catch zone: heart is near the paddle (bottom of play area)
+        if (ny > 82 && ny < 106 && Math.abs(it.x - px) < 20) {
+          addScore += it.golden ? 3 : 1;
+          if (it.golden) addGolden++;
+          else addHearts++;
+          playChime(it.golden ? 1200 : 800, 0.3);
+          if (it.golden) vibrate(30);
+          continue; // caught — don't keep it
         }
-        deferredScore = addScore;
-        deferredHearts = addHearts;
-        deferredGolden = addGolden;
-        deferredMissed = addMissed;
-        return next;
-      });
-      // Apply store updates OUTSIDE the setItems updater to avoid
-      // triggering re-renders of other components during this render.
-      if (deferredScore) {
-        setScore((s) => s + deferredScore);
-        if (deferredHearts) addCollectable("heart", deferredHearts);
-        if (deferredGolden) addCollectable("goldenHeart", deferredGolden);
+        if (ny > 112) {
+          addMissed += 1;
+          continue; // missed — remove
+        }
+        next.push({ ...it, y: ny });
       }
-      if (deferredMissed) setMissed((m) => m + deferredMissed);
+
+      // Write the survivors back to the ref
+      itemsRef.current = next;
+
+      // Apply score + collectables using refs, OUTSIDE any setState updater
+      if (addScore > 0) {
+        scoreRef.current += addScore;
+        setScore(scoreRef.current);
+        if (addHearts) addCollectableRef.current("heart", addHearts);
+        if (addGolden) addCollectableRef.current("goldenHeart", addGolden);
+
+        // Check win
+        if (scoreRef.current >= winTarget && !wonRef.current) {
+          wonRef.current = true;
+          setTimeout(() => onWinRef.current(), 600);
+        }
+      }
+      if (addMissed > 0) {
+        setMissed((m) => m + addMissed);
+      }
+
+      // Sync items to state for rendering (only if there are items to render)
+      setItems(next);
+      forceRender();
+
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [addCollectable]);
+  }, []);
 
   useEffect(() => {
-    if (score >= winTarget && !wonRef.current) {
-      wonRef.current = true;
-      setTimeout(() => onWin(), 600);
-    }
-  }, [score, onWin]);
+    // Cleanup on unmount
+    return () => {
+      itemsRef.current = [];
+    };
+  }, []);
 
   const onMove = (clientX: number) => {
     const rect = areaRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = ((clientX - rect.left) / rect.width) * 100;
     const clamped = Math.max(5, Math.min(95, x));
-    // Update the ref DIRECTLY so the RAF loop sees it immediately,
-    // not one render later.
     paddleXRef.current = clamped;
     setPaddleX(clamped);
   };
@@ -135,28 +155,28 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
         onTouchMove={(e) => onMove(e.touches[0].clientX)}
       >
         {items.map((it) => (
-          <motion.div
+          <div
             key={it.id}
             className="absolute text-2xl"
-            style={{ left: `${it.x}%`, top: `${it.y}%` }}
-            initial={{ rotate: 0 }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            style={{ left: `${it.x}%`, top: `${it.y}%`, transform: "translate(-50%,-50%)" }}
           >
-            <span
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               style={{
+                display: "inline-block",
                 filter: it.golden
                   ? "drop-shadow(0 0 8px rgba(255,209,102,0.9))"
                   : "drop-shadow(0 0 6px rgba(255,94,138,0.6))",
               }}
             >
               {it.emoji}
-            </span>
-          </motion.div>
+            </motion.span>
+          </div>
         ))}
 
         <motion.div
-          className="absolute bottom-2 text-4xl"
+          className="absolute bottom-2 text-5xl"
           style={{ left: `${paddleX}%`, translateX: "-50%" }}
           animate={{ scale: [1, 1.08, 1] }}
           transition={{ duration: 1.2, repeat: Infinity }}

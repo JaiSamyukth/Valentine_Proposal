@@ -39,6 +39,8 @@ export function MemoryMatch({ onWin }: { onWin: () => void }) {
   const [moves, setMoves] = useState(0);
   const [locked, setLocked] = useState(false);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   const matchedCount = useMemo(
     () => cards.filter((c) => c.matched).length,
@@ -92,7 +94,7 @@ export function MemoryMatch({ onWin }: { onWin: () => void }) {
       unlock("memoryMaster");
       playFlourish();
       vibrate([40, 50, 40]);
-      setTimeout(onWin, 900);
+      setTimeout(() => onWinRef.current(), 900);
     }
   }, [matchedCount, cards.length, onWin, unlock]);
 

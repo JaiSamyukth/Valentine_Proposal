@@ -23,6 +23,11 @@ export function ReactionTest({ onWin }: Props) {
   const litAtRef = useRef<number>(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+
+  useEffect(() => {
+    onWinRef.current = onWin;
+  });
 
   const startRound = () => {
     setState("waiting");
@@ -76,7 +81,7 @@ export function ReactionTest({ onWin }: Props) {
         wonRef.current = true;
         setTimeout(() => {
           playFlourish();
-          onWin();
+          onWinRef.current();
         }, 1200);
       } else {
         setTimeout(startRound, 1400);

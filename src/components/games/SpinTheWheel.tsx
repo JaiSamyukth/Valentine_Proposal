@@ -31,6 +31,8 @@ export function SpinTheWheel({ onWin }: Props) {
   const [lastWin, setLastWin] = useState<string>("");
   const [resultPopup, setResultPopup] = useState<string | null>(null);
   const wonRef = useRef(false);
+  const onWinRef = useRef(onWin);
+  useEffect(() => { onWinRef.current = onWin; });
 
   const spin = () => {
     if (spinning) return;
@@ -60,7 +62,7 @@ export function SpinTheWheel({ onWin }: Props) {
       setSpinsDone(newSpins);
       if (newSpins >= SPINS_TO_WIN && !wonRef.current) {
         wonRef.current = true;
-        setTimeout(() => onWin(), 1400);
+        setTimeout(() => onWinRef.current(), 1400);
       }
     }, 4200);
   };
