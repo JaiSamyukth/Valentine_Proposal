@@ -28,7 +28,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
   const paddleXRef = useRef(50);
   const wonRef = useRef(false);
   const areaRef = useRef<HTMLDivElement>(null);
-  const winTarget = 12;
+  const winTarget = 8;
 
   const spawn = useCallback(() => {
     const golden = Math.random() < 0.12;
@@ -36,7 +36,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
       id: idRef.current++,
       x: 8 + Math.random() * 84,
       y: -5,
-      vy: 0.25 + Math.random() * 0.35,
+      vy: 0.18 + Math.random() * 0.22,
       emoji: golden ? "💛" : EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
       golden,
     };
@@ -44,7 +44,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
   }, []);
 
   useEffect(() => {
-    const spawnInt = setInterval(spawn, 850);
+    const spawnInt = setInterval(spawn, 700);
     return () => clearInterval(spawnInt);
   }, [spawn]);
 
@@ -63,7 +63,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
         let addMissed = 0;
         for (const it of arr) {
           const ny = it.y + it.vy;
-          if (ny > 84 && ny < 100 && Math.abs(it.x - paddleXRef.current) < 12) {
+          if (ny > 80 && ny < 105 && Math.abs(it.x - paddleXRef.current) < 18) {
             addScore += it.golden ? 3 : 1;
             if (it.golden) addGolden++;
             else addHearts++;
@@ -71,7 +71,7 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
             if (it.golden) vibrate(30);
             continue;
           }
-          if (ny > 105) {
+          if (ny > 110) {
             addMissed += 1;
             continue;
           }

@@ -81,6 +81,13 @@ export function ReceiverOpening({ config, onDone }: Props) {
       animate={{ opacity: stage === "enter" ? 0 : 1 }}
       transition={{ duration: 1.2 }}
     >
+      {/* Skip button */}
+      <button
+        onClick={onDone}
+        className="absolute bottom-6 right-6 z-[110] text-[10px] uppercase tracking-[0.25em] text-white/30 transition-colors hover:text-white/70"
+      >
+        skip intro →
+      </button>
       <AnimatePresence mode="wait">
         {/* Black screen with tiny heart */}
         {(stage === "black" || stage === "beat") && (

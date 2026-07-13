@@ -381,3 +381,54 @@ Stage Summary:
 4. Wire seed into NPC behavior + weather variations.
 5. Add hidden universes per theme.
 6. Add service worker for offline PWA support.
+
+---
+Task ID: cron-round-9 (full end-to-end audit + heart catch fix)
+Agent: Z.ai Code (webDevReview cron)
+Task: Fix heart-catching bug, verify full flow from start to finish, ensure everything functions.
+
+Work Log:
+- **Heart Catch bug FIXED (properly this time)**: 
+  - Root cause: catch zone too narrow (84-100% = 16 units), fall speed too fast (0.25-0.6/frame), win target too high (12), catch radius too small (12).
+  - Fix: widened catch zone to 80-105% (25 units), slowed fall speed to 0.18-0.4/frame, reduced win target to 8, increased catch radius to 18, faster spawn (700ms vs 850ms).
+  - Verified: score reached 8 and game advanced to next scene.
+- **Added skip button to ReceiverOpening**: "skip intro →" in bottom-right corner so users (and testers) can skip the 25s opening sequence.
+- **Full end-to-end verification via agent-browser** (story HKMBMBW9E):
+  1. Landing → Builder → filled Alex/Jordan → generated link ✓
+  2. Receiver link opened → opening played → skipped to journey ✓
+  3. Heart Catch → WON (score 8) → "Butterflies loaded" ✓
+  4. Memory Match → solved all pairs → "Look closer" ✓
+  5. Find Hidden Heart → found at tile 23 → "Quick!" ✓
+  6. Whack-a-Heart → WON (round 67) → "Cupid's turn" ✓
+  7. Cupid's Arrow → WON → "One more surprise" ✓
+  8. Wheel of Love → spun twice → "Mend it." ✓
+  9. Sliding Puzzle → solved in 20 moves → "Almost there." ✓
+  10. Bubble Pop → WON (round 49) → "Dig deep." ✓
+  11. Treasure Hunt → found chest at tile 19 → "Two final tests." ✓
+  12. Heart Reflex → WON (round 3) → "A gift." ✓
+  13. Build a Bouquet → picked 6 flowers → pre-question ✓
+  14. Question → "Jordan, will you be my Valentine?" → clicked YES → finale ✓
+  15. Finale → "The sky begins to open..." → message shown → final button present ✓
+  - Collection reached 165 items. Zero console errors throughout.
+- **Receiver tracking verified**: GET /api/story/HKMBMBW9E/status returns views:1, phase:finale, yesPressed:True, completed:True — sender can see the receiver completed the entire experience.
+- Ran `bun run lint` → 0 errors, 0 warnings.
+
+Stage Summary:
+- **ALL 11 mini-games work end-to-end** — every game can be won and advances to the next scene.
+- **Heart Catch bug fixed** — wider catch zone, slower fall, lower target, bigger radius. Score reliably increments and game completes.
+- **Full flow verified**: Landing → Builder → generate link → receiver opens → cinematic opening (skippable) → 11 games → question → YES → finale with message + final button. Zero errors.
+- **Receiver tracking works**: sender sees the receiver opened the link, reached the finale, pressed YES, and completed.
+- All lint clean. All API calls returning 200.
+
+## Known Limitations / Remaining Next Steps
+- TypewriterDialogue component built but not yet integrated into all dialogue scenes.
+- Voice notes not yet recordable in builder.
+- Photos not yet persisted to DB.
+- NPC behavior not yet seed-varied.
+
+## Priority Recommendations for Next Phase
+1. Integrate TypewriterDialogue into all journey scenes + question.
+2. Add voice-note recording to the builder dashboard.
+3. Persist photos to DB (base64 or blob upload).
+4. Wire seed into NPC behavior + weather variations.
+5. Add hidden universes per theme.
