@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useExperience } from "@/lib/experience-store";
 import { playChime, playPop, vibrate } from "@/lib/sound";
