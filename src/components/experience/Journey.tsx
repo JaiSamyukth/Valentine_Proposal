@@ -11,7 +11,6 @@ import { FindHiddenHeart } from "@/components/games/FindHiddenHeart";
 import { CupidArrow } from "@/components/games/CupidArrow";
 import { SpinTheWheel } from "@/components/games/SpinTheWheel";
 import { WhackAHeart } from "@/components/games/WhackAHeart";
-import { SlidingPuzzle } from "@/components/games/SlidingPuzzle";
 import { BubblePop } from "@/components/games/BubblePop";
 import { TreasureHunt } from "@/components/games/TreasureHunt";
 import { ReactionTest } from "@/components/games/ReactionTest";
@@ -81,13 +80,6 @@ const GAME_REGISTRY: {
     subtitle: "Spin twice. Each spin gifts a treasure.",
     interstitial: { emoji: "🎡", title: "One more surprise.", body: "The wheel of love wants to gift you something. Spin it twice." },
     rewards: { collectables: [["key", 1]], popup: "Wrapping your gifts..." },
-  },
-  {
-    key: "sliding",
-    title: "Reassemble the Heart",
-    subtitle: "The pieces scattered. Slide them back into place to reveal the heart.",
-    interstitial: { emoji: "🧩", title: "Mend it.", body: "The heart scattered into pieces. Slide them back together." },
-    rewards: { collectables: [["diamond", 2], ["key", 1]], popup: "Mending the heart..." },
   },
   {
     key: "bubble",
@@ -299,8 +291,6 @@ function renderGame(gameKey: string, onWin: () => void) {
       return <CupidArrow onWin={onWin} />;
     case "wheel":
       return <SpinTheWheel onWin={onWin} />;
-    case "sliding":
-      return <SlidingPuzzle onWin={onWin} />;
     case "bubble":
       return <BubblePop onWin={onWin} />;
     case "treasure":

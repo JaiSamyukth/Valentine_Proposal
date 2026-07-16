@@ -77,7 +77,7 @@ export const DEFAULT_STORY_CONFIG: StoryConfig = {
   animationSpeed: 1,
   weather: "clear",
   timeOfDay: "night",
-  miniGames: ["heartcatch", "memory", "hidden", "whack", "cupid", "wheel", "sliding", "bubble", "treasure", "reaction", "bouquet"],
+  miniGames: ["heartcatch", "memory", "hidden", "whack", "cupid", "wheel", "bubble", "treasure", "reaction", "bouquet"],
   difficulty: "normal",
   endingStyle: "fireworks",
   confettiStyle: "mixed",

@@ -101,7 +101,7 @@ const DEFAULT_SETTINGS: ExperienceSettings = {
   youtubeUrl: "",
   reasons: [],
   timeline: [],
-  miniGames: ["heartcatch", "memory", "hidden", "whack", "cupid", "wheel", "sliding", "bubble", "treasure", "reaction", "bouquet"],
+  miniGames: ["heartcatch", "memory", "hidden", "whack", "cupid", "wheel", "bubble", "treasure", "reaction", "bouquet"],
   aiPoem: "",
   aiCompliment: "",
 };

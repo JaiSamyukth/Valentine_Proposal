@@ -32,7 +32,6 @@ const MINI_GAMES = [
   { key: "whack", label: "Whack-a-Heart", emoji: "🔨" },
   { key: "cupid", label: "Cupid's Arrow", emoji: "🏹" },
   { key: "wheel", label: "Spin the Wheel", emoji: "🎡" },
-  { key: "sliding", label: "Sliding Puzzle", emoji: "🧩" },
   { key: "bubble", label: "Bubble Hearts", emoji: "🫧" },
   { key: "treasure", label: "Treasure Hunt", emoji: "🗝️" },
   { key: "reaction", label: "Heart Reflex", emoji: "⚡" },
