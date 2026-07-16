@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, X } from "lucide-react";
+import { Trophy, X, Lock, Unlock } from "lucide-react";
 import { useExperience } from "@/lib/experience-store";
 import type { AchievementKey } from "@/lib/experience-store";
 import {
@@ -10,14 +10,37 @@ import {
   COLLECTABLE_ORDER,
   ACHIEVEMENT_META,
 } from "@/lib/content";
+import { playChime, playFlourish, vibrate } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 export function HUD() {
   const collectables = useExperience((s) => s.collectables);
   const achievements = useExperience((s) => s.achievements);
+  const secretCode = useExperience((s) => s.settings.secretCode);
+  const secretMessage = useExperience((s) => s.settings.secretMessage);
+  const unlock = useExperience((s) => s.unlockAchievement);
   const [open, setOpen] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeRevealed, setCodeRevealed] = useState(false);
+  const [codeError, setCodeError] = useState(false);
 
   const total = Object.values(collectables).reduce((a, b) => a + b, 0);
+
+  const submitCode = () => {
+    if (!secretCode) return;
+    if (codeInput.trim().toLowerCase() === secretCode.trim().toLowerCase()) {
+      setCodeRevealed(true);
+      setCodeError(false);
+      unlock("explorer");
+      playFlourish();
+      vibrate([40, 60, 40]);
+    } else {
+      setCodeError(true);
+      playChime(200, 0.3);
+      vibrate(40);
+      setTimeout(() => setCodeError(false), 1500);
+    }
+  };
 
   return (
     <>
@@ -130,9 +153,70 @@ export function HUD() {
                 )}
               </div>
 
-              <p className="mt-6 text-center font-script text-sm text-white/40">
-                Tip: type a secret word anywhere... ✨
-              </p>
+              {/* Secret code input */}
+              {secretCode && (
+                <div className="mt-6 rounded-2xl border border-[var(--gold)]/20 bg-[var(--gold)]/5 p-4">
+                  {!codeRevealed ? (
+                    <>
+                      <div className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-[var(--gold)]">
+                        <Lock className="h-3.5 w-3.5" />
+                        secret code
+                      </div>
+                      <p className="mb-3 font-script text-sm text-white/50">
+                        Someone left a hidden message for you. Enter the secret
+                        word to reveal it.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          value={codeInput}
+                          onChange={(e) => setCodeInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") submitCode();
+                          }}
+                          placeholder="enter the code..."
+                          className={cn(
+                            "flex-1 rounded-lg border bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none",
+                            codeError
+                              ? "border-[var(--rose-glow)] animate-pulse"
+                              : "border-white/10 focus:border-[var(--gold)]"
+                          )}
+                        />
+                        <button
+                          onClick={submitCode}
+                          className="rounded-lg border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-4 text-sm text-[var(--gold)] hover:bg-[var(--gold)]/20"
+                        >
+                          Unlock
+                        </button>
+                      </div>
+                      {codeError && (
+                        <p className="mt-2 text-xs text-[var(--rose-glow)]">
+                          Not quite. Try again. 💫
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-[var(--gold)]">
+                        <Unlock className="h-3.5 w-3.5" />
+                        secret revealed
+                      </div>
+                      <p className="font-script text-lg leading-relaxed text-white/90">
+                        {secretMessage ||
+                          "The code was correct. The universe says yes. 💖"}
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
+              {!secretCode && (
+                <p className="mt-6 text-center font-script text-sm text-white/40">
+                  Tip: type a secret word anywhere... ✨
+                </p>
+              )}
             </motion.div>
           </motion.div>
         )}

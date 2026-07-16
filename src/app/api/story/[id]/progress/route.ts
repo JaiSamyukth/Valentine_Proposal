@@ -16,11 +16,12 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { phase, scene, yesPressed, completed } = body as {
+    const { phase, scene, yesPressed, completed, dateAccepted } = body as {
       phase: string;
       scene?: number;
       yesPressed?: boolean;
       completed?: boolean;
+      dateAccepted?: boolean;
     };
 
     // Verify the story exists
@@ -50,6 +51,7 @@ export async function POST(
           currentPhase: phase,
           currentScene: scene ?? 0,
           yesPressed: yesPressed ?? false,
+          dateAccepted: dateAccepted ?? false,
           completedAt: completed ? new Date() : null,
           userAgent,
         },
@@ -68,6 +70,7 @@ export async function POST(
           currentPhase: newPhase,
           currentScene: newScene,
           yesPressed: yesPressed || view.yesPressed,
+          dateAccepted: dateAccepted || view.dateAccepted,
           completedAt: shouldMarkComplete
             ? new Date()
             : view.completedAt,

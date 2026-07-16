@@ -18,6 +18,7 @@ export function Finale() {
   const [stage, setStage] = useState<Stage>("sky");
   const [showButton, setShowButton] = useState(false);
   const [playingVoice, setPlayingVoice] = useState(false);
+  const [dateAccepted, setDateAccepted] = useState(false);
   const voiceRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -324,7 +325,7 @@ export function Finale() {
             )}
 
             <AnimatePresence>
-              {showButton && (
+              {showButton && !dateAccepted && (
                 <motion.button
                   initial={{ opacity: 0, scale: 0.6, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -332,6 +333,7 @@ export function Finale() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
+                    setDateAccepted(true);
                     playFlourish();
                     vibrate([60, 80, 60]);
                     confetti({
@@ -342,6 +344,19 @@ export function Finale() {
                       shapes: ["❤️", "💖", "✨", "🌹", "💫"],
                       scalar: 1.6,
                     });
+                    // Report "date accepted" to the server so the sender knows
+                    const storyId = window.location.hash.match(/story\/([^/?]+)/)?.[1];
+                    if (storyId) {
+                      fetch(`/api/story/${storyId}/progress`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          phase: "done",
+                          completed: true,
+                          dateAccepted: true,
+                        }),
+                      }).catch(() => {});
+                    }
                   }}
                   className="relative mt-10 overflow-hidden rounded-full bg-gradient-to-r from-[var(--rose-glow)] via-[#ff8e72] to-[var(--gold)] px-10 py-5 font-display text-xl text-black glow-rose sm:text-2xl"
                 >
@@ -350,6 +365,33 @@ export function Finale() {
                   </span>
                   <span className="absolute inset-0 shimmer opacity-50" />
                 </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Thank-you after accepting the date */}
+            <AnimatePresence>
+              {showButton && dateAccepted && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 16 }}
+                  className="mt-10 flex flex-col items-center gap-3"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-6xl"
+                    style={{ filter: "drop-shadow(0 0 30px rgba(255,94,138,0.9))" }}
+                  >
+                    💖
+                  </motion.div>
+                  <p className="font-display text-3xl gradient-text-rose sm:text-4xl">
+                    They said yes.
+                  </p>
+                  <p className="font-script text-lg text-white/60">
+                    {settings.senderName || "Someone"} will know.
+                  </p>
+                </motion.div>
               )}
             </AnimatePresence>
 

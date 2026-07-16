@@ -19,11 +19,13 @@ interface ViewData {
   currentPhase: string;
   currentScene: number;
   yesPressed: boolean;
+  dateAccepted: boolean;
 }
 
 interface StatusData {
   totalViews: number;
   completions: number;
+  dateAccepted: boolean;
   latestView: ViewData | null;
   allViews: ViewData[];
 }
@@ -95,6 +97,29 @@ export function StoryStatus({ storyId }: Props) {
 
   return (
     <div className="rounded-2xl border border-[var(--rose-glow)]/20 bg-[var(--rose-glow)]/5 p-4">
+      {/* Date accepted banner */}
+      {status.dateAccepted && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-4 rounded-xl border-2 border-[var(--gold)] bg-gradient-to-r from-[var(--rose-glow)]/20 to-[var(--gold)]/20 p-4 text-center glow-gold"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="text-4xl"
+          >
+            💖
+          </motion.div>
+          <p className="mt-2 font-display text-xl gradient-text-gold">
+            They accepted the date!
+          </p>
+          <p className="mt-1 font-script text-sm text-white/60">
+            The answer is yes. 🎉
+          </p>
+        </motion.div>
+      )}
+
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/60">
           <Eye className="h-3.5 w-3.5 text-[var(--rose-glow)]" />

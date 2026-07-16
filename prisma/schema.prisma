@@ -48,5 +48,6 @@ model StoryView {
   currentPhase String  @default("opening") // opening, journey, question, finale, done
   currentScene Int     @default(0)
   yesPressed  Boolean  @default(false)
+  dateAccepted Boolean @default(false)
   userAgent   String?
 }

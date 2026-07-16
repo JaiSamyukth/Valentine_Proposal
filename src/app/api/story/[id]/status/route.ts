@@ -35,6 +35,7 @@ export async function GET(
     return NextResponse.json({
       totalViews,
       completions,
+      dateAccepted: views.some((v) => v.dateAccepted),
       latestView: latestView
         ? {
             openedAt: latestView.openedAt,
@@ -43,6 +44,7 @@ export async function GET(
             currentPhase: latestView.currentPhase,
             currentScene: latestView.currentScene,
             yesPressed: latestView.yesPressed,
+            dateAccepted: latestView.dateAccepted,
           }
         : null,
       allViews: views.map((v) => ({
@@ -52,6 +54,7 @@ export async function GET(
         currentPhase: v.currentPhase,
         currentScene: v.currentScene,
         yesPressed: v.yesPressed,
+        dateAccepted: v.dateAccepted,
       })),
     });
   } catch (e) {
