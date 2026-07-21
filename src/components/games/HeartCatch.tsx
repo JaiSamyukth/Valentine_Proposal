@@ -150,9 +150,13 @@ export function HeartCatch({ onWin }: { onWin: () => void }) {
 
       <div
         ref={areaRef}
-        className="relative h-[420px] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent"
+        className="relative h-[340px] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent sm:h-[420px] no-select"
         onMouseMove={(e) => onMove(e.clientX)}
-        onTouchMove={(e) => onMove(e.touches[0].clientX)}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          onMove(e.touches[0].clientX);
+        }}
+        onTouchStart={(e) => onMove(e.touches[0].clientX)}
       >
         {items.map((it) => (
           <div

@@ -190,9 +190,16 @@ export function CupidArrow({ onWin }: Props) {
 
       <div
         ref={areaRef}
-        className="relative h-[440px] w-full max-w-2xl cursor-crosshair overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent"
+        className="relative h-[360px] w-full max-w-2xl cursor-crosshair overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent sm:h-[440px] no-select"
         onMouseMove={(e) => aimAt(e.clientX, e.clientY)}
-        onTouchMove={(e) => aimAt(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          aimAt(e.touches[0].clientX, e.touches[0].clientY);
+        }}
+        onTouchStart={(e) => {
+          aimAt(e.touches[0].clientX, e.touches[0].clientY);
+          shoot();
+        }}
         onClick={shoot}
       >
         {hearts.map((h) => (

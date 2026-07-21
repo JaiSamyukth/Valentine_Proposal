@@ -130,7 +130,7 @@ export function BubblePop({ onWin }: Props) {
         </span>
       </div>
 
-      <div className="relative h-[440px] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[var(--aurora)]/5 to-transparent">
+      <div className="relative h-[360px] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[var(--aurora)]/5 to-transparent sm:h-[440px]">
         <AnimatePresence>
           {bubbles.map((b) => (
             <motion.button

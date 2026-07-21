@@ -353,10 +353,21 @@ function GameScene({
   children: (handleWin: () => void) => React.ReactNode;
 }) {
   const [done, setDone] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   const handleWin = () => {
     setDone(true);
     onWin();
+  };
+
+  const skip = () => {
+    setDone(true);
+    onWin();
+  };
+
+  const retry = () => {
+    setDone(false);
+    setRetryKey((k) => k + 1);
   };
 
   return (
@@ -367,7 +378,9 @@ function GameScene({
       <p className="mx-auto mb-6 mt-2 max-w-md font-script text-lg text-white/60">
         {subtitle}
       </p>
-      <div className="flex justify-center">{children(handleWin)}</div>
+      <div key={retryKey} className="flex justify-center">
+        {children(handleWin)}
+      </div>
       {done && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -378,6 +391,26 @@ function GameScene({
             Beautifully done. ✨
           </span>
         </motion.div>
+      )}
+
+      {/* Skip + Retry controls — always visible, mobile-friendly */}
+      {!done && (
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button
+            onClick={retry}
+            className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white/90 active:scale-95 sm:text-sm"
+          >
+            <span className="text-base">↺</span>
+            <span className="hidden sm:inline">Retry</span>
+          </button>
+          <button
+            onClick={skip}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--rose-glow)]/30 bg-[var(--rose-glow)]/10 px-4 py-2 text-xs text-[var(--rose-glow)] transition-colors hover:bg-[var(--rose-glow)]/20 active:scale-95 sm:text-sm"
+          >
+            <span className="text-base">⏭</span>
+            <span className="hidden sm:inline">Skip</span>
+          </button>
+        </div>
       )}
     </div>
   );

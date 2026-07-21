@@ -119,7 +119,7 @@ export function ReactionTest({ onWin }: Props) {
       <motion.button
         onClick={handleTap}
         whileTap={{ scale: 0.97 }}
-        className={`relative flex h-[280px] w-full max-w-md flex-col items-center justify-center gap-4 rounded-3xl border-2 bg-gradient-to-br transition-colors ${bg}`}
+        className={`relative flex h-[240px] w-full max-w-md flex-col items-center justify-center gap-4 rounded-3xl border-2 bg-gradient-to-br transition-colors ${bg} sm:h-[280px]`}
         animate={
           state === "ready"
             ? { scale: [1, 1.02, 1] }
@@ -197,11 +197,22 @@ export function ReactionTest({ onWin }: Props) {
               <p className="mt-3 font-script text-xl text-[var(--rose-glow)]">
                 Too soon!
               </p>
-              <p className="mt-1 text-xs text-white/50">try again</p>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.button>
+
+      {/* Retry button when too soon */}
+      {state === "tooSoon" && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={startRound}
+          className="rounded-full bg-gradient-to-r from-[var(--rose-glow)] to-[var(--gold)] px-6 py-2 font-display text-sm text-black btn-bouncy"
+        >
+          ↺ Try again
+        </motion.button>
+      )}
 
       {/* Past times */}
       {times.length > 0 && (

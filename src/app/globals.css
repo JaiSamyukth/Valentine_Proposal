@@ -102,11 +102,34 @@
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Prevent pull-to-refresh and overscroll bounce on mobile */
+    overscroll-behavior: none;
+  }
+  /* Ensure touch targets are at least 44px on mobile */
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+    min-height: 36px;
+  }
+  /* Larger touch targets on mobile */
+  @media (max-width: 640px) {
+    button,
+    [role="button"] {
+      min-height: 44px;
+    }
+  }
+  /* Prevent text selection on game taps (mobile) */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 }
 
