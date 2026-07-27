@@ -63,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body
-        className={`${inter.variable} ${playfair.variable} ${cormorant.variable} antialiased bg-background text-foreground overflow-x-hidden`}
+        className={`${inter.variable} ${playfair.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />

@@ -50,7 +50,7 @@ export function ExperienceRoot({ receiverMode = false, seed }: Props) {
     phase === "finale" ? "party" : phase === "boot" ? "calm" : "normal";
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative min-h-screen w-full">
       {/* Living world layers (hidden during boot black screen) */}
       {phase !== "boot" && (
         <>

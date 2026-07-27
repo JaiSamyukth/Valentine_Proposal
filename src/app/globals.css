@@ -98,19 +98,23 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html,
-  body {
+  html {
     @apply bg-background text-foreground;
-    overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Only hide horizontal overflow on html, NOT on body —
+       hiding on both breaks vertical scrolling in many browsers. */
+    overflow-x: hidden;
   }
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Prevent pull-to-refresh and overscroll bounce on mobile */
-    overscroll-behavior: none;
+    /* Allow normal vertical scrolling */
+    overflow-x: hidden;
+    /* Don't use overscroll-behavior: none on body — it kills
+       scrolling on some mobile browsers. Use it only on specific
+       scroll containers if needed. */
   }
   /* Ensure touch targets are at least 44px on mobile */
   button,
