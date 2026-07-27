@@ -24,6 +24,7 @@ export interface ExperienceSettings {
   dateSuggestion: string;
   petName: string;
   secretCode: string;
+  secretMessage: string;
   spotifyUrl: string;
   youtubeUrl: string;
   reasons: string[];
@@ -97,6 +98,7 @@ const DEFAULT_SETTINGS: ExperienceSettings = {
   dateSuggestion: "",
   petName: "",
   secretCode: "",
+  secretMessage: "",
   spotifyUrl: "",
   youtubeUrl: "",
   reasons: [],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -12,6 +12,8 @@ import {
   Loader2,
   Image as ImageIcon,
   Music,
+  X,
+  ImagePlus,
 } from "lucide-react";
 import { usePhotos } from "@/lib/photo-store";
 import { THEME_LIST } from "@/lib/themes";
@@ -67,6 +69,8 @@ export function BuilderDashboard() {
   const [copied, setCopied] = useState(false);
   const [aiLoading, setAiLoading] = useState<"poem" | "compliment" | null>(null);
   const photos = usePhotos((s) => s.photos);
+  const addPhoto = usePhotos((s) => s.addPhoto);
+  const removePhoto = usePhotos((s) => s.removePhoto);
 
   const update = (patch: Partial<StoryConfig>) => {
     setConfig((c) => ({ ...c, ...patch }));
@@ -81,10 +85,29 @@ export function BuilderDashboard() {
     }
     setSaving(true);
     try {
-      // include photo URLs in config
+      // Convert photo object URLs to base64 data URLs so they persist
+      // in the database and work when the receiver opens the link.
+      const base64Photos = await Promise.all(
+        photos.map(async (p) => {
+          // If already a data URL, use as-is
+          if (p.url.startsWith("data:")) return p.url;
+          // Convert object URL to base64
+          try {
+            const res = await fetch(p.url);
+            const blob = await res.blob();
+            return await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+          } catch {
+            return p.url; // fallback
+          }
+        })
+      );
       const configToSave = {
         ...config,
-        photos: photos.map((p) => p.url),
+        photos: base64Photos,
       };
       const res = await fetch("/api/story", {
         method: "POST",
@@ -462,11 +485,16 @@ export function BuilderDashboard() {
             </div>
           </Section>
 
-          {/* Photos note */}
+          {/* Photos & music */}
           <Section title="Photos & music">
-            <p className="mb-2 text-xs text-white/40">
-              Photos can be added after generating the link (in the live preview).
-              Music links:
+            <PhotoUploader
+              photos={photos}
+              onAdd={addPhoto}
+              onRemove={removePhoto}
+            />
+            <p className="mb-4 mt-2 text-xs text-white/40">
+              Up to 6 photos. They&apos;re stored in the link and revealed in the
+              finale. Music links:
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
@@ -645,6 +673,79 @@ function Field({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+interface PhotoUploaderProps {
+  photos: { id: string; url: string; name: string }[];
+  onAdd: (url: string, name: string) => void;
+  onRemove: (id: string) => void;
+}
+
+function PhotoUploader({ photos, onAdd, onRemove }: PhotoUploaderProps) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).slice(0, 6).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const url = URL.createObjectURL(file);
+      onAdd(url, file.name);
+    });
+    playPop();
+  };
+
+  return (
+    <div>
+      <Label className="mb-1.5 flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/50">
+        <ImagePlus className="h-3.5 w-3.5" />
+        Photos (revealed in the finale)
+      </Label>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      <div className="flex flex-wrap gap-2">
+        {photos.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="group relative h-20 w-20 overflow-hidden rounded-xl border border-white/15"
+          >
+            <img
+              src={p.url}
+              alt={p.name}
+              className="h-full w-full object-cover"
+            />
+            <button
+              onClick={() => {
+                playPop();
+                onRemove(p.id);
+              }}
+              className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              aria-label={`Remove ${p.name}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </motion.div>
+        ))}
+        {photos.length < 6 && (
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/20 text-white/40 transition-colors hover:border-[var(--rose-glow)]/50 hover:text-white/70"
+          >
+            <ImagePlus className="h-5 w-5" />
+            <span className="text-[10px]">add</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }

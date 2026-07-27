@@ -6,6 +6,8 @@ import type { StoryConfig } from "@/lib/story-config";
 import { ReceiverOpening } from "./ReceiverOpening";
 import { ExperienceRoot } from "./ExperienceRoot";
 import { useExperience } from "@/lib/experience-store";
+import { usePhotos } from "@/lib/photo-store";
+import { useVoiceNote } from "@/lib/voice-store";
 import { useProgressReporter } from "@/hooks/use-progress-reporter";
 
 interface Props {
@@ -20,6 +22,8 @@ export function ReceiverExperience({ storyId }: Props) {
   const [seed, setSeed] = useState<number>(0);
   const [opened, setOpened] = useState(false);
   const updateSettings = useExperience((s) => s.updateSettings);
+  const addPhoto = usePhotos((s) => s.addPhoto);
+  const setVoiceNote = useVoiceNote((s) => s.setNote);
 
   // Track progress for the sender
   const phase = useExperience((s) => s.phase);
@@ -68,6 +72,7 @@ export function ReceiverExperience({ storyId }: Props) {
           dateSuggestion: data.config.dateSuggestion,
           petName: data.config.petName,
           secretCode: data.config.secretCode,
+          secretMessage: data.config.secretMessage || "",
           spotifyUrl: data.config.spotifyUrl,
           youtubeUrl: data.config.youtubeUrl,
           reasons: data.config.reasons || [],
@@ -76,6 +81,16 @@ export function ReceiverExperience({ storyId }: Props) {
           aiPoem: data.config.aiPoem || "",
           aiCompliment: data.config.aiCompliment || "",
         });
+        // Hydrate photos from the config (base64 data URLs stored in DB)
+        if (data.config.photos && Array.isArray(data.config.photos)) {
+          data.config.photos.forEach((url: string, i: number) => {
+            addPhoto(url, `photo-${i}`);
+          });
+        }
+        // Hydrate voice note if present (URL stored in config)
+        if (data.config.voiceNoteUrl) {
+          setVoiceNote(data.config.voiceNoteUrl, 0);
+        }
         setState("loaded");
       })
       .catch(() => {
