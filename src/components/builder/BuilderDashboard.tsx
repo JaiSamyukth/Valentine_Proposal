@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -71,6 +71,104 @@ export function BuilderDashboard() {
   const photos = usePhotos((s) => s.photos);
   const addPhoto = usePhotos((s) => s.addPhoto);
   const removePhoto = usePhotos((s) => s.removePhoto);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      // Don't intercept if pasting into an input field (except to allow magic paste if they want, but usually we just want it to trigger globally)
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+         // Optionally, we can still parse it if it's a huge dump, but standard is just global
+         const text = e.clipboardData?.getData("text") || "";
+         if (!text.includes("The two names") || !text.includes("World theme")) return;
+         e.preventDefault(); // intercept and fill everything instead of pasting into one field
+      }
+
+      const text = e.clipboardData?.getData("text");
+      if (!text) return;
+      
+      const updates: Partial<StoryConfig> = {};
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      
+      if (text.includes("The two names") && text.includes("World theme")) {
+        const namesIndex = lines.indexOf("The two names");
+        if (namesIndex !== -1 && lines[namesIndex + 1] === "*") {
+           updates.senderName = lines[namesIndex + 2];
+           updates.receiverName = lines[namesIndex + 3];
+        }
+        
+        const themeLine = lines.find(l => THEME_LIST.some(t => l.includes(t.name)));
+        if (themeLine) {
+           const theme = THEME_LIST.find(t => themeLine.includes(t.name));
+           if (theme) updates.theme = theme.key;
+        }
+
+        const weatherLine = lines.find(l => WEATHERS.some(w => l.includes(w.label)));
+        if (weatherLine) {
+           const weather = WEATHERS.find(w => weatherLine.includes(w.label));
+           if (weather) updates.weather = weather.key as any;
+        }
+
+        const intensities = ["calm", "normal", "party"];
+        const intensityLine = lines.find(l => intensities.includes(l.toLowerCase()));
+        if (intensityLine) updates.particleIntensity = intensityLine.toLowerCase() as any;
+
+        const quoteMatch = text.match(/Story & message\n([\s\S]*?)\nAI-generated romance/);
+        if (quoteMatch) {
+           const storyLines = quoteMatch[1].split('\n').map(l=>l.trim()).filter(Boolean);
+           if (storyLines.length >= 1) updates.quote = storyLines[0];
+           if (storyLines.length >= 2) updates.message = storyLines[1];
+           if (storyLines.length >= 3) updates.petName = storyLines[2];
+           if (storyLines.length >= 4) updates.dateSuggestion = storyLines[3];
+        }
+        
+        const poemMatch = text.match(/generate\n([\s\S]*?)— for /);
+        if (poemMatch) updates.aiPoem = poemMatch[1].trim();
+
+        const complimentMatch = text.match(/— for .*\n(?:generate\n)?([\s\S]*?)\nMini-games/);
+        if (complimentMatch) updates.aiCompliment = complimentMatch[1].trim();
+
+        const games: string[] = [];
+        MINI_GAMES.forEach(g => {
+           if (text.includes(g.label)) games.push(g.key);
+        });
+        if (games.length > 0) updates.miniGames = games;
+
+        const endingLine = lines.find(l => ENDING_STYLES.some(e => l.includes(e.label)));
+        if (endingLine) {
+           const ending = ENDING_STYLES.find(e => endingLine.includes(e.label));
+           if (ending) updates.endingStyle = ending.key as any;
+        }
+
+        const confettiLine = lines.find(l => CONFETTI_STYLES.some(c => l.includes(c.label) && !ENDING_STYLES.some(e => e.label === c.label)));
+        if (confettiLine) {
+           const confetti = CONFETTI_STYLES.find(c => confettiLine.includes(c.label));
+           if (confetti) updates.confettiStyle = confetti.key as any;
+        }
+
+        const secretsMatch = text.match(/Secrets\n([\s\S]*?)\nPhotos & music/);
+        if (secretsMatch) {
+           const secretLines = secretsMatch[1].split('\n').map(l=>l.trim()).filter(Boolean);
+           if (secretLines.length >= 1) updates.secretCode = secretLines[0];
+           if (secretLines.length >= 2) updates.secretMessage = secretLines[1];
+        }
+
+        const spotifyMatch = text.match(/https:\/\/open\.spotify\.com[^\s]*/);
+        if (spotifyMatch) updates.spotifyUrl = spotifyMatch[0];
+        
+        const ytMatch = text.match(/https:\/\/youtube\.com[^\s]*/);
+        if (ytMatch) updates.youtubeUrl = ytMatch[0];
+
+        if (Object.keys(updates).length > 0) {
+          setConfig(c => ({ ...c, ...updates }));
+          playPop();
+          // Let the user know the magic paste worked!
+          alert("✨ Magic Paste Applied!");
+        }
+      }
+    };
+    
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
 
   const update = (patch: Partial<StoryConfig>) => {
     setConfig((c) => ({ ...c, ...patch }));
