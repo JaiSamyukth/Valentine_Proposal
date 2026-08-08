@@ -77,11 +77,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Try the AI SDK
+    // Try OpenRouter AI
     try {
-      const ZAIModule = await import("z-ai-web-dev-sdk");
-      const ZAI = ZAIModule.default;
-      const zai = await ZAI.create();
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      if (!apiKey) {
+        throw new Error("OPENROUTER_API_KEY is missing");
+      }
 
       let systemPrompt = "";
       let userPrompt = "";
@@ -106,28 +107,44 @@ export async function POST(req: NextRequest) {
         }`;
       }
 
-      const completion = await zai.chat.completions.create({
-        messages: [
-          { role: "assistant", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        thinking: { type: "disabled" },
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://valentineproposal.com",
+          "X-Title": "Valentine Proposal"
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ]
+        })
       });
 
-      const text = completion.choices[0]?.message?.content?.trim() || "";
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content?.trim() || "";
+      
       if (text) {
         return NextResponse.json({ text, aiGenerated: true });
       }
       // empty response — fall through to fallback
       throw new Error("Empty AI response");
-    } catch {
-      // SDK not configured, import failed, or API error — use fallback
+    } catch (err) {
+      // API error or key missing — use fallback
+      console.warn("AI Generation failed or not configured, using fallback:", err);
       const text = pickFallback(type, receiverName, senderName);
       return NextResponse.json({ text, aiGenerated: false });
     }
   } catch (e) {
     return NextResponse.json(
-      { error: "AI generation failed: " + (e as Error).message },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
